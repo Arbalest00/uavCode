@@ -1,0 +1,7 @@
+path: ./
+train: ./img
+val: ./img_2
+test: 
+
+nc: 2
+names: ['red_pole','green_pole']
