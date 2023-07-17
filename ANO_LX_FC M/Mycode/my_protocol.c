@@ -1,6 +1,6 @@
 #include "my_protocol.h"
 #include "User_Task.h"
-struct sdata received_data={0,0,0,0,0,0};
+struct sdata received_data={0,0,100,0,0,0};
 struct PID_inc height_PID;
 struct PID_inc xy_PID;
 u8 RxBuffer[256];//树莓派数据缓存
@@ -8,6 +8,11 @@ u8 LidarBuffer[256];//激光雷达数据缓存
 u8 pi_receive_done_sign=0;//树莓派接收完成标志位
 u8 lidar_receive_done_sign=0;//激光雷达接收完成标志位
 s16 CSPX=0,CSPY=0;
+u8 x_high=0;
+u8 x_low=0;
+u8 y_high=0;
+u8 y_low=0;
+s16 integ_side=0x4000;
 void Send_str_by_len(USART_TypeDef * USARTx,u8 *s,u16 len)//串口发送函数
 {
 	u16 i=0;
@@ -70,10 +75,9 @@ void pi_receive(u8 data)//树莓派接受协议 串口2
 		received_data.task_sta=RxBuffer[1];
 		received_data.com_x=RxBuffer[2]-received_data.sp_side;
 		received_data.com_y=RxBuffer[3]-received_data.sp_side;
-		received_data.com_z=RxBuffer[4]-received_data.sp_side;
+		received_data.com_z=RxBuffer[4];
 		received_data.com_yaw=RxBuffer[5]-received_data.sp_side;
 		received_data.next_task_sign=RxBuffer[6];
-		
 		pi_receive_done_sign=1;
 	}
 	else
@@ -155,24 +159,43 @@ void pi_send()
 	{
 		USART_SendData(USART2,0xAA);
 		stage=1;
+		s16 num = ano_of.intergral_x + 0x4000;
+		x_high=(num >> 8) & 0xFF;
+		x_low=num & 0xFF;
+		s16 ynum = ano_of.intergral_y + 0x4000;
+		y_high=(ynum >> 8) & 0xFF;
+		y_low=ynum & 0xFF;
 	}
 	else if(stage==1)
 	{
-		USART_SendData(USART2,received_data.task_sta);
+		USART_SendData(USART2,mission_stage);
 		stage=2;
 	}
 	else if(stage==2)
 	{
-		USART_SendData(USART2,mission_stage);
+
+		USART_SendData(USART2,x_high);
 		//USART_SendData(USART2,0x05);
 		stage=3;
 	}
 	else if(stage==3)
 	{
-		USART_SendData(USART2,mission_done_flag);
+		USART_SendData(USART2,x_low);
 		stage=4;
 	}
 	else if(stage==4)
+	{
+
+		USART_SendData(USART2,y_high);
+		//USART_SendData(USART2,0x05);
+		stage=5;
+	}
+	else if(stage==5)
+	{
+		USART_SendData(USART2,y_low);
+		stage=6;
+	}
+	else if(stage==6)
 	{
 		USART_SendData(USART2,0xFF);
 		stage=0;

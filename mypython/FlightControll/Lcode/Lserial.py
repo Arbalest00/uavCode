@@ -1,10 +1,10 @@
 import serial
 import threading
 from typing import List
-from Lcode.Logger import logger
+from Logger import logger
 import time
-from Lcode.global_variable import lock
-DEBUG=False
+from global_variable import lock
+DEBUG=True
 class Serial_fc(object):
     def __init__(self,port,baudrate):
         self.ser=serial.Serial(port=port,baudrate=baudrate)
@@ -32,12 +32,16 @@ class Serial_fc(object):
             byte_data = self.ser.read() 
             if byte_data == self.startbyte:
                 # 读取接下来的四个字节数据
-                rgpioonse = self.ser.read(4)
+                recv = self.ser.read(6)
                 # 判断数据是否符合通信协议，即以0xFF结尾
-                if rgpioonse[3] == self.endbyte:
-                    # 将读取到的五个字节数据存入receive_data数组中
+                if recv[5] == self.endbyte:
+                    intergral_x = ((recv[1] << 8) | recv[2])-0x4000
+                    intergral_y = ((recv[3] << 8) | recv[4])-0x4000
+                    logger.info(intergral_x)
                     rxbuffer.clear()
-                    rxbuffer.extend(byte_data + rgpioonse)
+                    rxbuffer.append(recv[0])
+                    rxbuffer.append(intergral_x)
+                    rxbuffer.append(intergral_y)
                     if DEBUG :
                         logger.info(rxbuffer)
             time.sleep(0.01)

@@ -1,18 +1,19 @@
 import threading
 import time
-from Lcode.od import cv_cap
+from od import cv_cap
 from typing import List
-from Lcode.Logger import logger
-from Lcode.global_variable import sp_side,lock
+from Logger import logger
+from global_variable import sp_side,lock
 import math
 import simple_pid
 from RadarDrivers_reconstruct.Radar import Radar
-from yolo_v2.get_yolo_res import yolo_det 
+from get_yolo_res import yolo_det 
 import cv2
 import os
 cap = cv2.VideoCapture(0)
 yolo=yolo_det()
 radar=Radar()
+radar.start('COM3', 'LD06')
 count_time=0
 img=None
 yolo_res=None
@@ -47,7 +48,6 @@ class mission(object) :
                             logger.info("雷达丢失")
                             pass
                     if self.mission_step==0:
-                        radar.start('COM3', 'LD06')
                         count_time=time.time()
                         logger.info("树莓派任务阶段0 摄像头和雷达启动")
                         radar_sign=1
@@ -102,9 +102,15 @@ class mission(object) :
                         target_point=self.find_closer(point1,point2)
                         distance=self.distance_calculate(target_point)
                         angle=self.yaw_calculate(target_point)
+                        if color_sign==1:
+                                self.gpio_set(2,1)
+                                self.gpio_set(7,128)
+                        else :
+                                self.gpio_set(1,1)
+                                self.gpio_set(7,128)
                         logger.info("前进")
                         logger.info(distance)
-                        if distance>90:
+                        if distance>75:
                             self.speed_set(10,0,0,self.yaw_pid(angle))
                             self.change_count=0
                         else:
@@ -170,7 +176,7 @@ class mission(object) :
                             last_angle=0
                             count_time=time.time()
                     elif self.mission_step==7:
-                        if(time.time()-count_time)<3:
+                        if(time.time()-count_time)<5:
                             self.speed_set(20,0,0,0)
                         else:
                             self.mission_step+=1
@@ -219,7 +225,7 @@ class mission(object) :
                         target_point=self.find_closer(point1,point2)
                         distance=self.distance_calculate(target_point)
                         angle=self.yaw_calculate(target_point)
-                        if (time.time()- count_time)<18:
+                        if (time.time()- count_time)<20:
                             target_point=self.find_closer(point1,point2)
                             angle=self.yaw_calculate(target_point)
                             speed_yaw=self.circle_yaw_pid(angle)
