@@ -12,8 +12,8 @@ from Lcode.Logger import logger
 from RadarDrivers_reconstruct.Radar import Radar
 import Lcode.Lmission
 ##############################################变量############################################
-rxbuffer=[0,0,3,0,0]#飞控反传标志位 帧头/任务模式（用于确认）/当前任务阶段/阶段切换标志符/帧尾
-com_fc = [170, 0, sp_side, sp_side, sp_side, sp_side, 0,sp_side, 255]#发送给飞控的数据 帧头/任务模式/x/y/z/yaw/任务切换标志位/速度偏置量/帧尾
+rxbuffer=[0,0,0,0,0,0,0]#飞控反传标志位 帧头/任务模式（用于确认）/xhigh/xlow/yhigh/ylow/帧尾
+com_fc = [170, 0, sp_side, sp_side, 120, sp_side, 0,sp_side, 255]#发送给飞控的数据 帧头/任务模式/x/y/z高度/yaw/任务切换标志位/速度偏置量/帧尾
 com_gpio =[170,0,0,0,0,0,0,0,0,255]#发送给esp32/arduino的数据 GPIO输出 帧头/GPIO1~8/帧尾
 p1,p2=None,None
 ##########################################  任务  #############################################
