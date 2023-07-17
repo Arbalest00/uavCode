@@ -17,7 +17,7 @@ com_fc = [170, 0, sp_side, sp_side, 120, sp_side, 0,sp_side, 255]#发送给飞�
 com_gpio =[170,0,0,0,0,0,0,0,0,255]#发送给esp32/arduino的数据 GPIO输出 帧头/GPIO1~8/帧尾
 p1,p2=None,None
 ##########################################  任务  #############################################
-serial_fc=Lcode.Lserial.Serial_fc("COM4",460800)
+""" serial_fc=Lcode.Lserial.Serial_fc("COM4",460800)
 serial_fc.port_open()
 serial_fc.listen_start(rxbuffer)
 serial_fc.send_start(com_fc)
@@ -27,8 +27,9 @@ serial_gpio.send_start(com_gpio)
 #radar=Radar()
 #radar.start('COM3','LD06')
 mission_task=Lcode.Lmission.mission(rxbuffer,com_fc,com_gpio)
-mission_task.run() 
+mission_task.run()  """
 while(1):
     #print(radar.find_obstacles_with_filter())
+    print("success")
     time.sleep(0.2)
     pass

@@ -1,19 +1,18 @@
 import threading
 import time
-from od import cv_cap
+from Lcode.od import cv_cap
 from typing import List
-from Logger import logger
-from global_variable import sp_side,lock
+from Lcode.Logger import logger
+from Lcode.global_variable import sp_side,lock
 import math
 import simple_pid
 from RadarDrivers_reconstruct.Radar import Radar
-from get_yolo_res import yolo_det 
+from yolo_v2.get_yolo_res import yolo_det 
 import cv2
 import os
 cap = cv2.VideoCapture(0)
 yolo=yolo_det()
 radar=Radar()
-radar.start('COM3', 'LD06')
 count_time=0
 img=None
 yolo_res=None
@@ -50,6 +49,7 @@ class mission(object) :
                     if self.mission_step==0:
                         count_time=time.time()
                         logger.info("树莓派任务阶段0 摄像头和雷达启动")
+                        radar.start('COM3', 'LD06')
                         radar_sign=1
                         self.mission_step+=1
                         pass

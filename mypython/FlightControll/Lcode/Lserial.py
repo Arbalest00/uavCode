@@ -1,9 +1,9 @@
 import serial
 import threading
 from typing import List
-from Logger import logger
+from Lcode.Logger import logger
 import time
-from global_variable import lock
+from Lcode.global_variable import lock
 DEBUG=True
 class Serial_fc(object):
     def __init__(self,port,baudrate):
