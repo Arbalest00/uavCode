@@ -44,13 +44,13 @@ class Serial_fc(object):
                     rxbuffer.append(intergral_y)
                     if DEBUG :
                         logger.info(rxbuffer)
-            time.sleep(0.01)
+            time.sleep(0.02)
     def send_fc(self,comlist:List[int]):
         while self.fcsend_running==True:
             for value in comlist:
                 hex_value = hex(value)[2:].zfill(2)  # 将数组中的每个值转换成16进制字符串
                 self.ser.write(bytes.fromhex(hex_value))  # 将16进制字符串转换为字节并发送到串口
-            time.sleep(0.01)
+            time.sleep(0.02)
     def send_start(self,comlist:List[int]):
         self.fcsend_running=True
         fcsend_thread=threading.Thread(target=Serial_fc.send_fc,args=(self,comlist))
@@ -65,6 +65,7 @@ class Serial_gpio(object):
     def __init__(self,port,baudrate):
         self.ser=serial.Serial(port=port,baudrate=baudrate)
         self.gpiosend_running=False
+        self.gpiolisten_running=False
         self.rate=460800
     def port_open(self):
         self.ser.close()
@@ -76,7 +77,7 @@ class Serial_gpio(object):
             for value in comlist:
                 hex_value = hex(value)[2:].zfill(2)  # 将数组中的每个值转换成16进制字符串
                 self.ser.write(bytes.fromhex(hex_value))  # 将16进制字符串转换为字节并发送到串口
-            time.sleep(0.01)
+            time.sleep(0.02)
     def send_start(self,comlist:List[int]):
         self.gpiosend_running=True
         gpiosend_thread=threading.Thread(target=Serial_gpio.send_gpio,args=(self,comlist))
@@ -86,4 +87,26 @@ class Serial_gpio(object):
     def send_end(self):
         self.gpiosend_running=False
         logger.info("gpio串口发送线程关闭")
-
+    def listen_start(self,rxbuffer:List[int]):
+        self.gpiolisten_running=True
+        listen_thread=threading.Thread(target=Serial_gpio.listen_gpio,args=(self,rxbuffer))
+        listen_thread.daemon=True
+        listen_thread.start()
+        logger.info("gpio串口监听线程启动")
+    def listen_end(self):
+        self.gpiolisten_running=False
+        logger.info("gpio串口监听线程关闭")
+    def listen_gpio(self,rxbuffer:List[int]):
+        while self.gpiolisten_running ==True:
+            byte_data = self.ser.read() 
+            if byte_data == b'\xAA':
+                # 读取接下来的四个字节数据
+                recv = self.ser.read(5)
+                # 判断数据是否符合通信协议，即以0xFF结尾
+                if recv[4] == 0xFF:
+                    rxbuffer.clear()
+                    for i in range(0,4):
+                        rxbuffer.append(recv[i])
+                    if DEBUG :
+                        logger.info(rxbuffer)
+            time.sleep(0.02)

@@ -27,7 +27,7 @@ class cv_cap(object):
     def stop(self):
         self.cap_running=False
         logger.info("摄像头关闭")
-class radar_cap(object):
+""" class radar_cap(object):
     def __init__(self,port='COM3',name='LD06') -> None:
         self.radar=Radar()
         self.radar.start(port,name)
@@ -46,4 +46,4 @@ class radar_cap(object):
             time.sleep(0.02)
     def stop(self):
         self.radar_running=False
-        logger.info("雷达关闭")
+        logger.info("雷达关闭") """

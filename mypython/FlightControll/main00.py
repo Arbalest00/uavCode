@@ -10,12 +10,12 @@ import Lcode.Lserial
 import time
 from Lcode.Logger import logger
 from RadarDrivers_reconstruct.Radar import Radar
-import Lcode.Lmission
 ##############################################变量############################################
-rxbuffer=[0,0,0,0,0,0,0]#飞控反传标志位 帧头/任务模式（用于确认）/xhigh/xlow/yhigh/ylow/帧尾
+rxbuffer_fc=[0,0,0]#飞控反传信息 任务模式/x积分值/y积分值
+rxbuffer_gpio=[0,0,0,0]#gpio反传信息,启动/模式/P1/P2
 com_fc = [170, 0, sp_side, sp_side, 120, sp_side, 0,sp_side, 255]#发送给飞控的数据 帧头/任务模式/x/y/z高度/yaw/任务切换标志位/速度偏置量/帧尾
-com_gpio =[170,0,0,0,0,0,0,0,0,255]#发送给esp32/arduino的数据 GPIO输出 帧头/GPIO1~8/帧尾
-p1,p2=None,None
+com_gpio =[170,0,0,0,0,0,0,0,0,0,0,255]#发送给esp32/arduino的数据 GPIO输出 帧头/GPIO1~10/帧尾
+run_sign=False
 ##########################################  任务  #############################################
 """ serial_fc=Lcode.Lserial.Serial_fc("COM4",460800)
 serial_fc.port_open()
@@ -26,10 +26,22 @@ serial_gpio.port_open()
 serial_gpio.send_start(com_gpio)
 #radar=Radar()
 #radar.start('COM3','LD06')
-mission_task=Lcode.Lmission.mission(rxbuffer,com_fc,com_gpio)
-mission_task.run()  """
+"""
 while(1):
-    #print(radar.find_obstacles_with_filter())
-    print("success")
+    if run_sign==False:
+        if rxbuffer_gpio[1]==1:
+            run_sign=True
+            if rxbuffer_gpio[0]==1:
+                from Lcode.Lmission_okr01 import mission
+                mission_task=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
+                mission_task.run()
+            elif rxbuffer_gpio[0]==2:
+                from Lcode.Lmission_okr02 import mission
+                mission_task=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
+                mission_task.run()
+            elif rxbuffer_gpio[0]==3:
+                from Lcode.Lmission_okr03 import mission
+                mission_task=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
+                mission_task.run()
     time.sleep(0.2)
     pass
