@@ -171,9 +171,8 @@ class Map_360(object):
     请复习python-numpy的基本知识
     """
 
-
     # 映射方法
-    ACC = 2 # 精度放大倍数(总点数=360*ACC)
+    ACC = 2  # 精度放大倍数(总点数=360*ACC)
     REMAP = 2  # 映射范围(越大精度越低, 但是残影越少,实际映射范围=+-UPDATE_MAP/ACC度)
     MODE_MIN = 0  # 在范围内选择最近的点更新
     MODE_MAX = 1  # 在范围内选择最远的点更新

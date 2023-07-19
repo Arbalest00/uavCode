@@ -50,13 +50,15 @@ class radar_map_resolve(radar_serial_updater):
         super().__init__()
         self.radar_cv_obj = radar_cv()
 
-    def map_visual_resolve_rt_pose(self, rtpose_size, rtpose_scale_ratio, DEBUG=False):
+    def map_visual_resolve_rt_pose(self, where_to_find, rtpose_size, rtpose_scale_ratio, DEBUG=False):
         """
         从雷达点云图像中解析出中点位置
         img: 雷达点云图像(灰度图)
         _DEBUG: 显示解析结果
         return: 位姿(x,y,yaw)
         """
+        # 找线位置 0: 右侧线和下侧线, 1: 左侧线下侧线
+        where_to_find_line = where_to_find
         # 参数设置
         kernal_di = 9
         kernal_er = 5
@@ -97,17 +99,30 @@ class radar_map_resolve(radar_serial_updater):
         back_lines = []
         if lines is not None:
             for line in lines:
-                x1, y1, x2, y2 = line[0]
-                if x1 > x0 and x2 > x0 and ((y1 > y0 > y2) or (y1 < y0 < y2)):  # 右侧线
-                    if x1 > x2:
-                        right_lines.append((x2, y2, x1, y1))
-                    else:
-                        right_lines.append((x1, y1, x2, y2))
-                elif y1 > y0 and y2 > y0 and ((x1 > x0 > x2) or (x1 < x0 < x2)):  # 下侧线
-                    if y1 > y2:
-                        back_lines.append((x2, y2, x1, y1))
-                    else:
-                        back_lines.append((x1, y1, x2, y2))
+                if where_to_find_line == 0:
+                    x1, y1, x2, y2 = line[0]
+                    if x1 > x0 and x2 > x0 and ((y1 > y0 > y2) or (y1 < y0 < y2)):  # 右侧线
+                        if x1 > x2:
+                            right_lines.append((x2, y2, x1, y1))
+                        else:
+                            right_lines.append((x1, y1, x2, y2))
+                    elif y1 > y0 and y2 > y0 and ((x1 > x0 > x2) or (x1 < x0 < x2)):  # 下侧线
+                        if y1 > y2:
+                            back_lines.append((x2, y2, x1, y1))
+                        else:
+                            back_lines.append((x1, y1, x2, y2))
+                elif where_to_find_line == 1:
+                    x1, y1, x2, y2 = line[0]
+                    if y1 > y0 and y2 > y0 and ((x1 > x0 > x2) or (x1 < x0 < x2)):  # 下侧线
+                        if y1 > y2:
+                            right_lines.append((x2, y2, x1, y1))
+                        else:
+                            right_lines.append((x1, y1, x2, y2))
+                    elif x1 < x0 and x2 < x0 and ((y1 > y0 > y2) or (y1 < y0 < y2)):   # 左侧线
+                        if x1 > x2:
+                            back_lines.append((x2, y2, x1, y1))
+                        else:
+                            back_lines.append((x1, y1, x2, y2))
 
         for line in right_lines:
             x1, y1, x2, y2 = line
@@ -488,16 +503,80 @@ class radar_map_resolve(radar_serial_updater):
             return True, len(obstacles_points_list)
         return False, 0
 
-    def find_obstacles_with_filter(self):
-        rtpose_size = 1000
-        rtpose_scale_ratio = 1
+    def find_obstacles_with_filter(
+        self, _rtpose_size=1000, _rtpose_scale_ratio=1, DEBUG=False
+    ):
+        rtpose_size = _rtpose_size
+        rtpose_scale_ratio = _rtpose_scale_ratio
         img = self.output_cloud(
             size=int(rtpose_size),
             scale=0.1 * rtpose_scale_ratio,
         )
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         res = self.radar_cv_obj.filt(img)
-        #cv2.imshow("result", res)
-        #print(res)
         return res
-        cv2.waitKey(1)
+        # if len(res) == 2:
+        #     size = img.shape
+        #     x0, y0 = size[0] // 2, size[1] // 2
+        #     cir_1 = res[0]
+        #     cir_2 = res[1]
+        #     x1, y1, r1 = cir_1
+        #     x2, y2, r2 = cir_2
+        #     x1 = x1 - x0
+        #     y1 = y1 - y0
+        #     x2 = x2 - x0
+        #     y2 = y2 - y0
+        #     if x1 > x2:
+        #         x1, y1, x2, y2 = x2, y2, x1, y1
+        #     yaw = np.arctan((y2 - y1) / (x2 - x1 + 0.0000001)) * 180 / np.pi
+        #     mid_point_x = (x1 + x2) / 2
+        #     mid_point_y = (y1 + y2) / 2
+        #     if mid_point_y > 0:
+        #         x = -get_point_line_distance(0, 0, x1, y1, x2, y2, 1)[0]
+        #     else:
+        #         x = get_point_line_distance(0, 0, x1, y1, x2, y2, 1)[0]
+        #     mid_dis = np.sqrt(mid_point_x**2 + mid_point_y**2)
+        #     if mid_point_x > 0:
+        #         y = -np.sqrt(abs(mid_dis**2 - x**2))
+        #     else:
+        #         y = np.sqrt(abs(mid_dis**2 - x**2))
+
+        # if DEBUG:
+        #     cv2.line(
+        #         img,
+        #         (int(x1 + x0), int(y1 + y0)),
+        #         (int(x2 + x0), int(y2 + y0)),
+        #         (0, 0, 255),
+        #         1,
+        #     )
+        #     cv2.line(
+        #         img,
+        #         (x0, y0),
+        #         (int(mid_point_x + x0), int(mid_point_y + y0)),
+        #         (0, 255, 0),
+        #         1,
+        #     )
+        #     cv2.putText(
+        #         img,
+        #         f"({x:.1f}, {y:.1f}, {yaw:.1f})",
+        #         (x0, y0 - 20),
+        #         cv2.FONT_HERSHEY_SIMPLEX,
+        #         0.7,
+        #         (0, 0, 255),
+        #         1,
+        #     )
+        #     cv2.circle(img, (int(x0 + x1), int(y0 + y1)), 3, (0, 255, 0), 1)
+        #     cv2.circle(img, (int(x0 + x2), int(y0 + y2)), 3, (0, 255, 0), 1)
+        #     cv2.circle(
+        #         img,
+        #         (int(x0 + mid_point_x), int(y0 + mid_point_y)),
+        #         3,
+        #         (0, 255, 0),
+        #         1,
+        #     )
+        #     cv2.circle(img, (x0, y0), 3, (0, 255, 0), 1)
+        #     cv2.imshow("Map Resolve", img)
+        #     cv2.imshow("result", res)
+        #     cv2.waitKey(1)
+
+        # return x, y, yaw

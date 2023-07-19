@@ -2,7 +2,7 @@ import threading
 import time
 import struct
 import serial
-from loguru import logger
+from Lcode.Logger import logger
 from RadarDrivers_reconstruct.RadarMapBase import Map_360, Radar_Package
 
 

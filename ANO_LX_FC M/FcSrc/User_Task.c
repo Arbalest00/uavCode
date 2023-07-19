@@ -135,14 +135,14 @@ void UserTask_OneKeyCmd(void)//一键任务
 					else
 					{
 						time_dly_cnt_ms = 0;
-						mission_step += OneKey_Takeoff(170);
+						mission_step += OneKey_Takeoff(120);
 						one_key_takeoff_f=1;
 					}
 				}
 				break;
 				case 3://等三秒
 				{
-					if(time_dly_cnt_ms<1000)//任务延时
+					if(time_dly_cnt_ms<5000)//任务延时
 					{
 						time_dly_cnt_ms+=20;//ms
 					}
@@ -165,7 +165,7 @@ void UserTask_OneKeyCmd(void)//一键任务
 				{
 					if(received_data.next_task_sign==0)
 					{
-						tar_setdata(received_data.com_x,received_data.com_y,height_set(ano_of.of_alt_cm,160),received_data.com_yaw);
+						tar_setdata(received_data.com_x,received_data.com_y,height_set(ano_of.of_alt_cm,received_data.com_z),received_data.com_yaw);
 					}
 					else
 					{
@@ -180,7 +180,7 @@ void UserTask_OneKeyCmd(void)//一键任务
 				{
 					if(received_data.next_task_sign==0)
 					{
-						tar_setdata(received_data.com_x,received_data.com_y,height_set(ano_of.of_alt_cm,160),received_data.com_yaw);
+						tar_setdata(received_data.com_x,received_data.com_y,height_set(ano_of.of_alt_cm,received_data.com_z),received_data.com_yaw);
 					}
 					else
 					{

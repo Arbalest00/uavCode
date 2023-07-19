@@ -3,8 +3,8 @@ import threading
 from typing import List
 from Lcode.Logger import logger
 import time
-from Lcode.global_variable import lock
-DEBUG=True
+from Lcode.global_variable import lock,task_start_sign
+DEBUG=False
 class Serial_fc(object):
     def __init__(self,port,baudrate):
         self.ser=serial.Serial(port=port,baudrate=baudrate)
@@ -37,20 +37,21 @@ class Serial_fc(object):
                 if recv[5] == self.endbyte:
                     intergral_x = ((recv[1] << 8) | recv[2])-0x4000
                     intergral_y = ((recv[3] << 8) | recv[4])-0x4000
-                    logger.info(intergral_x)
                     rxbuffer.clear()
                     rxbuffer.append(recv[0])
                     rxbuffer.append(intergral_x)
                     rxbuffer.append(intergral_y)
+                    if recv[0]==0x05:
+                        task_start_sign.value=True
                     if DEBUG :
                         logger.info(rxbuffer)
-            time.sleep(0.01)
+            time.sleep(0.05)
     def send_fc(self,comlist:List[int]):
         while self.fcsend_running==True:
             for value in comlist:
                 hex_value = hex(value)[2:].zfill(2)  # 将数组中的每个值转换成16进制字符串
                 self.ser.write(bytes.fromhex(hex_value))  # 将16进制字符串转换为字节并发送到串口
-            time.sleep(0.05)
+            time.sleep(0.02)
     def send_start(self,comlist:List[int]):
         self.fcsend_running=True
         fcsend_thread=threading.Thread(target=Serial_fc.send_fc,args=(self,comlist))
@@ -77,7 +78,7 @@ class Serial_gpio(object):
             for value in comlist:
                 hex_value = hex(value)[2:].zfill(2)  # 将数组中的每个值转换成16进制字符串
                 self.ser.write(bytes.fromhex(hex_value))  # 将16进制字符串转换为字节并发送到串口
-            time.sleep(0.05)
+            time.sleep(0.02)
     def send_start(self,comlist:List[int]):
         self.gpiosend_running=True
         gpiosend_thread=threading.Thread(target=Serial_gpio.send_gpio,args=(self,comlist))
@@ -111,4 +112,4 @@ class Serial_gpio(object):
                     if DEBUG :
                         logger.info(rxbuffer)
                     lock.release()
-            time.sleep(0.01)
+            time.sleep(0.05)

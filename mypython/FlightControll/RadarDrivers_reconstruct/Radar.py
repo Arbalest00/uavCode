@@ -1,7 +1,7 @@
 # from typing import Any
 import serial
 import threading
-from loguru import logger
+from Lcode.Logger import logger
 from RadarDrivers_reconstruct.RadarMapApplication import radar_map_application
 
 

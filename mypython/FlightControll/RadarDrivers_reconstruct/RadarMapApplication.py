@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from RadarDrivers_reconstruct.RadarMapResolve import radar_map_resolve
 from RadarDrivers_reconstruct.RadarMapBase import Point_2D
-from loguru import logger
+from Lcode.Logger import logger
 
 
 class radar_map_application(radar_map_resolve):
@@ -19,6 +19,7 @@ class radar_map_application(radar_map_resolve):
         self.pose_running = False
         self._fp_flag = False
         self._rtpose_flag = False
+        self._rtpose_flag_two_point = False
         self.fp_points = []
         self.rt_pose = [0.0, 0.0, 0.0]
         self._rt_pose_inited = [False, False, False]
@@ -61,6 +62,22 @@ class radar_map_application(radar_map_resolve):
         self.rt_pose = [0.0, 0.0, 0.0]
         self._rt_pose_inited = [False, False, False]
 
+    def start_resolve_pose_with_two_points(
+        self, size: int = 1000, scale_ratio: float = 1, low_pass_ratio: float = 0.5
+    ):
+        """
+        开始使用两点解算位姿
+        size: 解算范围(长宽为size的正方形)
+        scale_ratio: 降采样比例, 降低精度节省计算资源
+        low_pass_ratio: 低通滤波比例
+        """
+        self._rtpose_flag_two_point = True
+        self._rtpose_size = size
+        self._rtpose_scale_ratio = scale_ratio
+        self._rtpose_low_pass_ratio = low_pass_ratio
+        self.rt_pose = [0.0, 0.0, 0.0]
+        self._rt_pose_inited = [False, False, False]
+
     def map_resolve_task(self):
         while self.pose_running:
             try:
@@ -77,7 +94,7 @@ class radar_map_application(radar_map_resolve):
 
                     if self._rtpose_flag:
                         x, y, yaw = self.map_visual_resolve_rt_pose(
-                            self._rtpose_size, self._rtpose_scale_ratio
+                            0, self._rtpose_size, self._rtpose_scale_ratio
                         )
 
                         if x is not None:
@@ -123,19 +140,14 @@ class radar_map_application(radar_map_resolve):
             try:
                 if self._map_updated_event.wait(1):
                     self._map_updated_event.clear()
-                    if self._rtpose_flag:
-                        obstacle_points = self.find_obstacles()
-                        if obstacle_points > 2:
-                            logger.error(
-                                "[RADAR] Too many obstacles, unable to resolve pose"
-                            )
-                            continue
-                        elif obstacle_points < 2:
-                            logger.error(
-                                "[RADAR] Too few obstacles, unable to resolve pose"
-                            )
-                            continue
-                        x, y, yaw = self.pose_resolve_with_two_point(DEBUG=True)
+                    if self._rtpose_flag_two_point and not self._rtpose_flag:
+                        x, y, yaw = self.find_obstacles_with_filter(
+                            _rtpose_size=1000, _rtpose_scale=1, DEBUG=True
+                        )
+                    elif self._rtpose_flag and not self._rtpose_flag_two_point:
+                        x, y, yaw = self.map_visual_resolve_rt_pose(
+                            self._rtpose_size, self._rtpose_scale_ratio
+                        )
                         if x is not None:
                             if self._rt_pose_inited[0]:
                                 self.rt_pose[0] += (
@@ -176,6 +188,15 @@ class radar_map_application(radar_map_resolve):
         停止使用点云图解算位姿
         """
         self._rtpose_flag = False
+        self.rt_pose = [0.0, 0.0, 0.0]
+        self._rt_pose_inited = [False, False, False]
+        self.rt_pose_update_event.clear()
+
+    def stop_resolve_pose_with_two_points(self):
+        """
+        停止使用两点解算位姿
+        """
+        self._rtpose_flag_two_point = False
         self.rt_pose = [0.0, 0.0, 0.0]
         self._rt_pose_inited = [False, False, False]
         self.rt_pose_update_event.clear()
