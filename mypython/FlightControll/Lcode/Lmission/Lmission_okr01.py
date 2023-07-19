@@ -24,7 +24,7 @@ class mission(object) :
             self.change_count=0
             self.bias=[0,0]
             self.self_pos = [0,0]
-            self.target = [[75,325],[125,50],[275,200],[350,125],[425,350],[425,50],[350,275],[200,275],[200,125],[125,200],[275,350],[275,50],[425,200]]
+            self.target = [[130,491],[407.440],[252,288],[325,213],[99,139],[402,138],[174,213],[175,364],[328,365],[252,440],[100,288],[404,287],[248,139]]
             self.P1=[0,0]
             self.P2=[0,0]
         def run(self):
@@ -42,10 +42,10 @@ class mission(object) :
                 if self.fc_mission_step ==0x05 :
                     if self.mission_step==0:
                         self.mission_step=1
-                        self.bias=[int(radar.rt_pose[0])-self.target[0][0],int(radar.rt_pose[1])-self.target[0][1]]
+                        """ self.bias=[int(radar.rt_pose[0])-self.target[0][0],int(radar.rt_pose[1])-self.target[0][1]]
                         for i in range(len(self.target)):
                             self.target[i][0] += self.bias[0]
-                            self.target[i][1] += self.bias[1]
+                            self.target[i][1] += self.bias[1] """
                         self.P1=self.target[self.gpio_data[2]]
                         self.P2=self.target[self.gpio_data[3]]
                         logger.info("取得偏置，设置点位，准备开始")
@@ -54,6 +54,26 @@ class mission(object) :
                     elif self.mission_step==1:
                         if abs((int(radar.rt_pose[0])-self.P1[0]))>threshold or abs((int(radar.rt_pose[1])-self.P1[1]))>threshold:
                             self.speed_set(x_pid(int(radar.rt_pose[0])),y_pid(int(radar.rt_pose[1])))
+                            self.height_set(fly_height)
+                        else:
+                            self.mission_step=2
+                            self.time_count=time.time()
+                            logger.info("到达P1，悬停开始")
+                    elif self.mission_step==2:
+                        if time.time()-self.time_count<5:
+                            self.speed_set(x_pid(int(radar.rt_pose[0])),y_pid(int(radar.rt_pose[1])))
+                            self.height_set(put_height)
+                        else:
+                            self.mission_step=3
+                            self.time_count=time.time()
+                            logger.info("悬停结束，恢复高度")
+                    elif self.mission_step==3:
+                        if time.time()-self.time_count<5:
+                            self.speed_set(x_pid(int(radar.rt_pose[0])),y_pid(int(radar.rt_pose[1])))
+                            self.height_set(fly_height)
+                        else:
+                            self.mission_step=4
+                            logger.info("测试结束 准备降落")
                     else:
                         self.end()
             time.sleep(0.01)
