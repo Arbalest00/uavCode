@@ -28,20 +28,20 @@ serial_gpio.send_start(com_gpio)
 #radar.start('COM3','LD06')
 """
 while(1):
-    if run_sign==False:
+    """ if run_sign==False:
         if rxbuffer_gpio[1]==1:
             run_sign=True
             if rxbuffer_gpio[0]==1:
-                from Lcode.Lmission_okr01 import mission
+                from Lcode.Lmission.Lmission_okr01 import mission
                 mission_task=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
                 mission_task.run()
             elif rxbuffer_gpio[0]==2:
-                from Lcode.Lmission_okr02 import mission
+                from Lcode.Lmission.Lmission_okr02 import mission
                 mission_task=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
                 mission_task.run()
             elif rxbuffer_gpio[0]==3:
-                from Lcode.Lmission_okr03 import mission
+                from Lcode.Lmission.Lmission_okr03 import mission
                 mission_task=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
-                mission_task.run()
+                mission_task.run() """
     time.sleep(0.2)
     pass

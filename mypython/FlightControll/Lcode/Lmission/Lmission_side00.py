@@ -38,7 +38,7 @@ class mission(object) :
                     if self.mission_step==0:
                         self.mission_step=1
                         self.P1=self.target[self.gpio_data[2]]
-                        self.P2=self.target[self.gpio_data[3]]-self.target[self.gpio_data[2]]
+                        self.P2=[self.target[self.gpio_data[3]][i]-self.target[self.gpio_data[2]][i] for i in range(2)]
                         logger.info("进入程控阶段1")
                         pass
                     elif self.mission_step==1:
@@ -49,8 +49,8 @@ class mission(object) :
                         self.mission_step=2
                         logger.info("阶段2,前往P1")
                     elif self.mission_step==2:
-                        if math.abs(x_pid.get(self.fc_data[1]-self.x_intergral_base))>3 or math.abs(y_pid.get_pid(self.fc_data[2]-self.y_intergral_base))>3:
-                            self.speed_set(x_pid.get(self.fc_data[1]-self.x_intergral_base),y_pid.get_pid(self.fc_data[2]-self.y_intergral_base),fly_height,0)
+                        if abs(x_pid.get_pid(self.fc_data[1]-self.x_intergral_base))>3 or abs(y_pid.get_pid(self.fc_data[2]-self.y_intergral_base))>3:
+                            self.speed_set(x_pid.get_pid(self.fc_data[1]-self.x_intergral_base),y_pid.get_pid(self.fc_data[2]-self.y_intergral_base),fly_height,0)
                             self.change_count=0
                         else:
                             self.change_count+=1
@@ -61,7 +61,7 @@ class mission(object) :
                             logger.info("阶段3,悬停5s 放货")
                     elif self.mission_step==3:
                         if time.time()-self.time_count<5:
-                            self.speed_set(x_pid.get(self.fc_data[1]-self.x_intergral_base),y_pid.get_pid(self.fc_data[2]-self.y_intergral_base),put_height,0)
+                            self.speed_set(x_pid.get_pid(self.fc_data[1]-self.x_intergral_base),y_pid.get_pid(self.fc_data[2]-self.y_intergral_base),put_height,0)
                             self.change_count=0
                         else:
                             self.change_count+=1
@@ -72,7 +72,7 @@ class mission(object) :
                             logger.info("阶段4,悬停3s等待回复高度")
                     elif self.mission_step==4:
                         if time.time()-self.time_count<5:
-                            self.speed_set(x_pid.get(self.fc_data[1]-self.x_intergral_base),y_pid.get_pid(self.fc_data[2]-self.y_intergral_base),fly_height,0)
+                            self.speed_set(x_pid.get_pid(self.fc_data[1]-self.x_intergral_base),y_pid.get_pid(self.fc_data[2]-self.y_intergral_base),fly_height,0)
                             self.change_count=0
                         else:
                             self.change_count+=1
@@ -89,9 +89,10 @@ class mission(object) :
             time.sleep(0.01)
         def gpio_set(self,gpion,value=0):
             self.com_gpio[gpion]=value
-        def speed_set(self,x=0,y=0,yaw=0):
+        def speed_set(self,x=0,y=0,height=120,yaw=0):
             self.com_fc[2]=x+sp_side
             self.com_fc[3]=y+sp_side
+            self.com_fc[4]=height
             self.com_fc[5]=yaw+sp_side
         def height_set(self,height):
             self.com_fc[4]=height
