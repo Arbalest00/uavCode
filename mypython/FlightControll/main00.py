@@ -20,13 +20,14 @@ run_sign=False
 """ serial_fc=Lcode.Lserial.Serial_fc("COM4",460800)
 serial_fc.port_open()
 serial_fc.listen_start(rxbuffer)
-serial_fc.send_start(com_fc)
+serial_fc.send_start(com_fc) """
 serial_gpio=Lcode.Lserial.Serial_gpio("COM5",38400)
 serial_gpio.port_open()
 serial_gpio.send_start(com_gpio)
+serial_gpio.listen_start(rxbuffer_gpio)
 #radar=Radar()
 #radar.start('COM3','LD06')
-"""
+
 while(1):
     """ if run_sign==False:
         if rxbuffer_gpio[1]==1:
