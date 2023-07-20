@@ -94,7 +94,7 @@ class radar_map_application(radar_map_resolve):
 
                     if self._rtpose_flag:
                         x, y, yaw = self.map_visual_resolve_rt_pose(
-                            0, self._rtpose_size, self._rtpose_scale_ratio
+                            0, self._rtpose_size, self._rtpose_scale_ratio, DEBUG=False
                         )
 
                         if x is not None:
