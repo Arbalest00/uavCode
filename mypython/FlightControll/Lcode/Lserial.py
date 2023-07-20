@@ -43,6 +43,8 @@ class Serial_fc(object):
                     rxbuffer.append(intergral_y)
                     if recv[0]==0x05:
                         task_start_sign.value=True
+                    else:
+                        task_start_sign.value=False
                     if DEBUG :
                         logger.info(rxbuffer)
             time.sleep(0.05)
@@ -51,7 +53,7 @@ class Serial_fc(object):
             for value in comlist:
                 hex_value = hex(value)[2:].zfill(2)  # 将数组中的每个值转换成16进制字符串
                 self.ser.write(bytes.fromhex(hex_value))  # 将16进制字符串转换为字节并发送到串口
-            time.sleep(0.02)
+            time.sleep(0.01)
     def send_start(self,comlist:List[int]):
         self.fcsend_running=True
         fcsend_thread=threading.Thread(target=Serial_fc.send_fc,args=(self,comlist))
@@ -109,7 +111,7 @@ class Serial_gpio(object):
                     rxbuffer.clear()
                     for i in range(0,4):
                         rxbuffer.append(recv[i])
-                    if DEBUG :
+                    if task_start_sign.value ==False:
                         logger.info(rxbuffer)
                     lock.release()
             time.sleep(0.05)
