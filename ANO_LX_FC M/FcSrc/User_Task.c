@@ -167,27 +167,32 @@ void UserTask_OneKeyCmd(void)//Ò»¼üÈÎÎñ
 					{
 						tar_setdata(received_data.com_x,received_data.com_y,height_set(ano_of.of_alt_cm,received_data.com_z),received_data.com_yaw);
 					}
+					else if(received_data.next_task_sign==1)
+					{
+						time_dly_cnt_ms = 0;
+						mission_step = 6;
+					}
 					else
 					{
-						tar_setdata(0,0,0,0);
-						PID_init();
-						time_dly_cnt_ms = 0;
-						mission_step += 1;
+						mission_step = 101;
 					}
+						
 				}
 				break;
-				case 6://Ê÷İ®ÅÉ¿ØÖÆ½×¶Î
+				case 6://Ê÷İ®ÅÉ¿ØÖÆ½×¶Î//¹âÁ÷¸øÒ¯ËÀ
 				{
-					if(received_data.next_task_sign==0)
+					if(received_data.next_task_sign==1)
 					{
-						tar_setdata(received_data.com_x,received_data.com_y,height_set(ano_of.of_alt_cm,received_data.com_z),received_data.com_yaw);
+						tar_setdata(received_data.com_x,received_data.com_y,height_set(received_data.com_z,received_data.com_z),received_data.com_yaw);
+					}
+					else if(received_data.next_task_sign==0)
+					{
+						time_dly_cnt_ms = 0;
+						mission_step =5;
 					}
 					else
 					{
-						tar_setdata(0,0,0,0);
-						PID_init();
-						time_dly_cnt_ms = 0;
-						mission_step += 1;
+						mission_step = 101;
 					}
 				}
 				break;

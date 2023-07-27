@@ -60,36 +60,209 @@ class radar_cv:
         eroded_image = cv2.erode(dilated_image, kernel_erode, iterations=1)
         return eroded_image
 
-    def remove_lines(self, image):
+    def get_intersection(self,line1, line2):
         """
-        去除图像中的直线
+        计算两条直线的交点
         """
-        # 将图像转换为灰度图像
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # 使用Canny边缘检测算法进行边缘检测
-        edges = cv2.Canny(gray, 50, 150, apertureSize=3)
-        # 运行Hough直线变换检测直线
-        lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=30)
-        mask = np.zeros_like(image)
-        # 在掩膜图像上绘制检测到的直线
-        try:
-            for line in lines:
-                rho, theta = line[0]
-                a = np.cos(theta)
-                b = np.sin(theta)
-                x0 = a * rho
-                y0 = b * rho
-                x1 = int(x0 + 1000 * (-b))
-                y1 = int(y0 + 1000 * (a))
-                x2 = int(x0 - 1000 * (-b))
-                y2 = int(y0 - 1000 * (a))
-                cv2.line(mask, (x1, y1), (x2, y2),
-                         (255, 255, 255), self.hough_line_size)
-            # 将直线从原始图像中去除
-            result = cv2.subtract(image, mask)
-        except:
-            result = image
-        return result
+        x1, y1 = line1[0]
+        x2, y2 = line1[1]
+        x3, y3 = line2[0]
+        x4, y4 = line2[1]
+        # 计算直线的斜率
+        slope1 = (y2 - y1) / (x2 - x1) if x2 - x1 != 0 else float('inf')
+        slope2 = (y4 - y3) / (x4 - x3) if x4 - x3 != 0 else float('inf')
+        # 计算直线的截距
+        intercept1 = y1 - slope1 * x1 if slope1 != float('inf') else x1
+        intercept2 = y3 - slope2 * x3 if slope2 != float('inf') else x3
+        # 计算交点的横坐标
+        if slope1 == slope2:
+            x = float('inf')
+        elif slope1 == float('inf'):
+            x = x1
+        elif slope2 == float('inf'):
+            x = x3
+        else:
+            x = (intercept2 - intercept1) / (slope1 - slope2)
+        # 计算交点的纵坐标
+        if slope1 == float('inf'):
+            y = slope2 * x + intercept2
+        else:
+            y = slope1 * x + intercept1
+        x = int(x)
+        y = int(y)
+        return [x, y]
+
+    def sort_points_clockwise(self,points):
+        """
+        将点按照顺时针排序
+        """
+        # 计算每个点相对于中心点的极角
+        center_x = sum(point[0] for point in points) / len(points)
+        center_y = sum(point[1] for point in points) / len(points)
+        angles = []
+        for point in points:
+            x, y = point
+            angle = np.arctan2(y - center_y, x - center_x)
+            angles.append(angle)
+        # 按照极角对点进行排序
+        sorted_points = [point for _, point in sorted(zip(angles, points))]
+        return sorted_points
+
+
+    def remove_lines(self,image):
+            """
+            去掉图像中的直线,直线围成四边形的外面
+            """
+            # 将图像转换为灰度图像
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            # 使用Canny边缘检测算法进行边缘检测
+            edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+            # 运行Hough直线变换检测直线
+            lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=30)
+            mask = np.zeros_like(image)
+            mask_1 = np.zeros_like(image)
+            # 在掩膜图像上绘制检测到的直线
+            try:
+                point_left = []
+                point_right = []
+                point_up = []
+                point_down = []
+                for line in lines:
+                    rho, theta = line[0]
+                    a = np.cos(theta)
+                    b = np.sin(theta)
+                    x0 = a * rho
+                    y0 = b * rho
+                    x1 = int(x0 + 1000 * (-b))
+                    y1 = int(y0 + 1000 * (a))
+                    x2 = int(x0 - 1000 * (-b))
+                    y2 = int(y0 - 1000 * (a))
+                    if((x1 < 500 and x2 < 500) and ((y1 < 500 and y2 > 500) or (y1 >500 and y2 <500))):
+                        if(y1 > y2):
+                            tmp = y1
+                            y1 = y2
+                            y2 = tmp
+                            tmp = x1
+                            x1 = x2
+                            x2 = tmp
+                        point_left.append([x1,y1,x2,y2])
+                    if((x1 > 500 and x2 > 500) and ((y1 < 500 and y2 > 500) or (y1 >500 and y2 <500))):
+                        if(y1 > y2):
+                            tmp = y1
+                            y1 = y2
+                            y2 = tmp
+                            tmp = x1
+                            x1 = x2
+                            x2 = tmp
+                        point_right.append([x1,y1,x2,y2])
+                    if((y1 < 500 and y2 < 500) and ((x1 < 500 and x2 > 500) or (x1 >500 and x2 <500))):
+                        if(x1 > x2):
+                            tmp = x1
+                            x1 = x2
+                            x2 = tmp
+                            tmp = y1
+                            y1 = y2
+                            y2 = tmp
+                        point_up.append([x1,y1,x2,y2])
+                    if((y1 > 500 and y2 > 500) and ((x1 < 500 and x2 > 500) or (x1 >500 and x2 <500))):
+                        if(x1 > x2):
+                            tmp = x1
+                            x1 = x2
+                            x2 = tmp
+                            tmp = y1
+                            y1 = y2
+                            y2 = tmp
+                        point_down.append([x1,y1,x2,y2])
+                left_aver = []
+                right_aver = []
+                up_aver = []
+                down_aver = []
+                x1 = 0
+                y1 = 0
+                x2 = 0
+                y2 = 0
+                for i in range(len(point_left)):
+                    x1 += point_left[i][0]
+                    y1 += point_left[i][1]
+                    x2 += point_left[i][2]
+                    y2 += point_left[i][3]
+                x1 = int(x1/len(point_left))
+                y1 = int(y1/len(point_left))
+                x2 = int(x2/len(point_left))
+                y2 = int(y2/len(point_left))
+                left_aver = [x1,y1,x2,y2]
+                x1 = 0
+                y1 = 0
+                x2 = 0
+                y2 = 0
+                for i in range(len(point_right)):
+                    x1 += point_right[i][0]
+                    y1 += point_right[i][1]
+                    x2 += point_right[i][2]
+                    y2 += point_right[i][3]
+                x1 = int(x1/len(point_right))
+                y1 = int(y1/len(point_right))
+                x2 = int(x2/len(point_right))
+                y2 = int(y2/len(point_right))
+                right_aver = [x1,y1,x2,y2]
+                x1 = 0
+                y1 = 0
+                x2 = 0
+                y2 = 0
+                for i in range(len(point_up)):
+                    x1 += point_up[i][0]
+                    y1 += point_up[i][1]
+                    x2 += point_up[i][2]
+                    y2 += point_up[i][3]
+                x1 = int(x1/len(point_up))
+                y1 = int(y1/len(point_up))
+                x2 = int(x2/len(point_up))
+                y2 = int(y2/len(point_up))
+                up_aver = [x1,y1,x2,y2]
+                x1 = 0
+                y1 = 0
+                x2 = 0
+                y2 = 0
+                for i in range(len(point_down)):
+                    x1 += point_down[i][0]
+                    y1 += point_down[i][1]
+                    x2 += point_down[i][2]
+                    y2 += point_down[i][3]
+                x1 = int(x1/len(point_down))
+                y1 = int(y1/len(point_down))
+                x2 = int(x2/len(point_down))
+                y2 = int(y2/len(point_down))
+                down_aver = [x1,y1,x2,y2]
+                lines = [left_aver,right_aver,up_aver,down_aver]
+                arr = []
+                for i in range(4):
+                    line_tmp = lines[i]
+                    x1 = line_tmp[0]
+                    y1 = line_tmp[1]
+                    x2 = line_tmp[2]
+                    y2 = line_tmp[3]     
+                    arr.append([[x1,y1],[x2,y2]])
+                    cv2.line(mask, (x1, y1), (x2, y2), (255, 255, 255), 100)
+                rect_point = []
+                intersection1 = self.get_intersection(arr[0], arr[2])
+                rect_point.append(intersection1)
+                intersection2 = self.get_intersection(arr[0], arr[3])
+                rect_point.append(intersection2)
+                intersection3 = self.get_intersection(arr[1], arr[2])
+                rect_point.append(intersection3)
+                intersection4 = self.get_intersection(arr[1], arr[3])
+                rect_point.append(intersection4)
+                rect_point = self.sort_points_clockwise(rect_point)
+                # 在掩膜上绘制四边形
+                cv2.fillPoly(mask_1, [np.array(rect_point)], (255, 255, 255))
+                mask_1 = cv2.bitwise_not(mask_1)
+                # 应用掩膜到图像
+                # 将直线从原始图像中去除
+                result = cv2.subtract(image, mask)
+                result = cv2.subtract(result, mask_1)
+            except:
+                result = image
+            return result
 
     def blacken_edges(self, image):
         """

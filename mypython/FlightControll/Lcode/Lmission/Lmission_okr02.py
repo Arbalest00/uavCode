@@ -255,7 +255,7 @@ class mission(object) :
             self.com_fc[4]=height
         def end(self):
             lock.acquire()
-            self.com_fc[6]=1
+            self.com_fc[6]=101
             lock.release()
             logger.info("任务结束")
     

@@ -5,7 +5,7 @@ from typing import List, Literal
 from RadarDrivers_reconstruct.RadarMapBase import Point_2D
 from RadarDrivers_reconstruct.RadarSerialUpdater import radar_serial_updater
 from time import sleep
-from RadarDrivers_reconstruct.test import radar_cv
+# from RadarDrivers_reconstruct.test import radar_cv
 
 
 def get_point_line_distance(
@@ -48,7 +48,7 @@ class radar_map_resolve(radar_serial_updater):
 
     def __init__(self) -> None:
         super().__init__()
-        self.radar_cv_obj = radar_cv()
+        # self.radar_cv_obj = radar_cv()
 
     def map_visual_resolve_rt_pose(self, where_to_find, rtpose_size, rtpose_scale_ratio, DEBUG=False):
         """

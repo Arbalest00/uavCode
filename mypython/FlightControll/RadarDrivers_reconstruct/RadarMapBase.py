@@ -172,7 +172,7 @@ class Map_360(object):
     """
 
     # 映射方法
-    ACC = 2  # 精度放大倍数(总点数=360*ACC)
+    ACC = 3  # 精度放大倍数(总点数=360*ACC)
     REMAP = 2  # 映射范围(越大精度越低, 但是残影越少,实际映射范围=+-UPDATE_MAP/ACC度)
     MODE_MIN = 0  # 在范围内选择最近的点更新
     MODE_MAX = 1  # 在范围内选择最远的点更新
@@ -182,7 +182,7 @@ class Map_360(object):
     data = np.ones(360 * ACC, dtype=np.int64) * -1
     time_stamp = np.zeros(360 * ACC, dtype=np.float64)  # 时间戳
     # 设置
-    confidence_threshold = 30  # 置信度阈值
+    confidence_threshold = 20  # 置信度阈值
     distance_threshold = 10  # 距离阈值
     timeout_clear = True  # 超时清除
     timeout_time = 1  # 超时时间 s

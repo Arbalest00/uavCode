@@ -239,7 +239,7 @@ class mission(object) :
                     else:
                          self.end()
                         #雷达寻找杆，等待返回
-            time.sleep(0.01)
+                time.sleep(0.01)
         def gpio_set(self,gpion,value=0):
             self.com_gpio[gpion]=value
         def speed_set(self,x=0,y=0,z=0,yaw=0):
