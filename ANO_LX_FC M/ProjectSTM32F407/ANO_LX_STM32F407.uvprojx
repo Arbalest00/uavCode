@@ -703,6 +703,23 @@
         </Group>
         <Group>
           <GroupName>side</GroupName>
+          <Files>
+            <File>
+              <FileName>plant protect.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\side\plant protect.c</FilePath>
+            </File>
+            <File>
+              <FileName>trash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\side\trash.c</FilePath>
+            </File>
+            <File>
+              <FileName>trash competition.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\side\trash competition.c</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>

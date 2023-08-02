@@ -4,7 +4,8 @@ import math
 from typing import List
 from Lcode.Lpid import PID
 from Lcode.Logger import logger
-from Lcode.global_variable import sp_side,lock
+from Lcode.global_variable import sp_side,lock,task_start_sign
+from RadarDrivers_reconstruct.Radar import Radar
 put_height=50
 fly_height=120
 class mission(object) :
@@ -21,7 +22,7 @@ class mission(object) :
             self.x_intergral_base=0
             self.y_intergral_base=0
             self.target=[[0,0],[275,-50],[125,-200],[200,-275],[-25,-350],[275,-350],[50,-275],[50,-125],[200,-125],[125,-50],[-25,-200],[275,-200],[125,-350]]
-            self.P1,P2=[0,0],[0,0]
+            self.targetlist=[]
         def run(self):
             self.task_running=True
             task_thread=threading.Thread(target=self.task)
@@ -33,8 +34,7 @@ class mission(object) :
         def task(self):
             global put_height,fly_height
             while self.task_running==True :
-                self.fc_mission_step = self.fc_data[0]
-                if self.fc_mission_step ==0x05 :
+                if task_start_sign.value==True :
                     if self.mission_step==0:
                         self.mission_step=1
                         self.P1=self.target[self.gpio_data[2]]
@@ -43,7 +43,9 @@ class mission(object) :
                         pass
                     else:
                         self.end()
-            time.sleep(0.01)
+                time.sleep(0.01)
+        def fc_take_off(self):
+            self.com_fc[1]=1
         def gpio_set(self,gpion,value=0):
             self.com_gpio[gpion]=value
         def speed_set(self,x=0,y=0,yaw=0):
@@ -54,7 +56,22 @@ class mission(object) :
             self.com_fc[4]=height
         def end(self):
             lock.acquire()
-            self.com_fc[6]=1
+            self.com_fc[6]=101
             lock.release()
             logger.info("任务结束")
+        def rerun(self):
+            self.mission_step=0
+            self.task_running=True
+            logger.info("任务重启")
+            pass
+        def gpio_init(self):
+            self.com_gpio[1]=1
+            self.com_gpio[2]=64
+        def com_init(self):
+            self.com_fc[1]=0
+            self.com_fc[2]=sp_side
+            self.com_fc[3]=sp_side
+            self.com_fc[4]=fly_height
+            self.com_fc[5]=sp_side
+            self.com_fc[6]=0
     

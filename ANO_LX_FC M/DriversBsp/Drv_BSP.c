@@ -235,7 +235,7 @@ void DrvRcInputTask(float dT_s)
 			}
 		}
 		//检查失控保护设置
-		if ((rc_in.rc_ch.st_data.ch_[ch_5_aux1] > 1200 && rc_in.rc_ch.st_data.ch_[ch_5_aux1] < 1400) || (rc_in.rc_ch.st_data.ch_[ch_5_aux1] > 1600 && rc_in.rc_ch.st_data.ch_[ch_5_aux1] < 1800)||rc_in.rc_ch.st_data.ch_[ch_7_aux3] > 1800)
+		if ((rc_in.rc_ch.st_data.ch_[ch_5_aux1] > 1200 && rc_in.rc_ch.st_data.ch_[ch_5_aux1] < 1400) || (rc_in.rc_ch.st_data.ch_[ch_5_aux1] > 1600 && rc_in.rc_ch.st_data.ch_[ch_5_aux1] < 1800)||rc_in.rc_ch.st_data.ch_[ch_7_aux3] > 1800||rc_in.rc_ch.st_data.ch_[ch_6_aux2] > 1800)
 		{
 			//满足设置，标记为失控
 			failsafe = 1;

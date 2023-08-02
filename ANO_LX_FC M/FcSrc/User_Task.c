@@ -19,7 +19,8 @@ void UserTask_OneKeyCmd(void)//一键任务
     static u8 mission_step,eme_stop=1,pi_start_f=0,now_task_mode=0;
 	//////////////////////////////////////////////////////////////////////////////////
     //一键起飞 降落判断有遥控信号才执行
-    if (rc_in.no_signal == 0)
+    /*
+	if (rc_in.no_signal == 0)
     {
         //判断第6通道拨杆位置 1300<CH_6<1700
         if (rc_in.rc_ch.st_data.ch_[ch_6_aux2] > 1700 && rc_in.rc_ch.st_data.ch_[ch_6_aux2] < 2200)
@@ -56,7 +57,7 @@ void UserTask_OneKeyCmd(void)//一键任务
             //复位标记，以便再次执行
             one_key_land_f = 0;
         }
-	}
+	}*/
     ////////////////////////////////////////////////////////////////////////
 	//一键锁桨
 	if (rc_in.rc_ch.st_data.ch_[ch_8_aux4] > 1700 &&rc_in.rc_ch.st_data.ch_[ch_8_aux4] < 2200) 
@@ -78,7 +79,7 @@ void UserTask_OneKeyCmd(void)//一键任务
 	}
 	///////////////////////////////////////////////////////////////////////
 	//任务启动
-	if(rc_in.rc_ch.st_data.ch_[ch_7_aux3]>1700 && rc_in.rc_ch.st_data.ch_[ch_7_aux3]<2200)//树莓派远程起飞再加判断
+	if((rc_in.rc_ch.st_data.ch_[ch_7_aux3]>1700 && rc_in.rc_ch.st_data.ch_[ch_7_aux3]<2200)||(received_data.task_sta==1))//树莓派远程起飞再加判断
 		{
 			//还没有执行
 			if(one_key_mission_f ==0)

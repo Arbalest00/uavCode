@@ -1,7 +1,0 @@
-path: yolo_v2/
-train: yolo_v2/img
-val: yolo_v2/img_2
-test:
-
-nc: 2
-names: ["red_pole", "green_pole"]

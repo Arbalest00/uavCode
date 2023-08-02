@@ -72,7 +72,7 @@ void pi_receive(u8 data)//树莓派接受协议 串口2
 	{
 		RxBuffer[8]=data;
 		received_data.sp_side=RxBuffer[7];
-		received_data.task_sta=RxBuffer[1];//启动
+		received_data.task_sta=RxBuffer[1];//启动指示
 		received_data.com_x=RxBuffer[2]-received_data.sp_side;
 		received_data.com_y=RxBuffer[3]-received_data.sp_side;
 		received_data.com_z=RxBuffer[4];
