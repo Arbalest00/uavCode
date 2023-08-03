@@ -5,12 +5,14 @@ from typing import List
 from Lcode.Lpid import PID
 from Lcode.Logger import logger
 from Lcode.global_variable import sp_side,lock,task_start_sign
+from Lcode.Lprotocol import udp_terminal
 from RadarDrivers_reconstruct.Radar import Radar
 from t265_realsense import t265
 put_height=50
 fly_height=150
-realsense=t265()
-threshold=1
+#realsense=t265.t265_class()
+threshold=5
+udp=udp_terminal()
 class mission(object) :
         #左正右负，前正后负
         def __init__(self,fc_data:List[int],com_fc:List[int],com_gpio:List[int],gpio_data:List[int]) -> None:
@@ -27,44 +29,55 @@ class mission(object) :
             self.y_intergral_base=0
             self.pointcount=0
             self.iscvcap=False
-            self.xyz=[]
+            self.xyz=[0,0,0]
+            self.xy=[170,int(self.xyz[0]),int(self.xyz[1]),255]
             self.yaw=0
-            self.target=[[0,-400],[320,400],[320,0],[80,0],[80,-320],[240,-320],[240,-80],[160,-80],[160,-240],[0,0]]
+            self.target=[[0,-400],[320,-400],[320,0],[80,0],[80,-320],[240,-320],[240,-80],[160,-80],[160,-240],[0,0]]
         def run(self):
             self.task_running=True
+            #realsense.autoset()
+            udp.send_start("192.168.4.255",2887,self.xy)
+            self.t265sign=True
             task_thread=threading.Thread(target=self.task)
             task_thread.daemon=True
             task_thread.start()
             self.mission_step=0
-            logger.info("任务启动")
+            logger.info("任务启动 t265标定")
             pass
         def task(self):
             global put_height,fly_height
             while self.task_running==True :
-                if task_start_sign.value==True :
-                    if self.t265sign==True:
-                        self.xyz=realsense.get_actual_pose()
+                """ if self.t265sign==True:
+                        self.xyz=realsense.get_actual_pos()
                         self.yaw=realsense.get_actual_yaw()
+                        logger.info("t265返回数据为%s",self.xyz) """
+                if task_start_sign.value==True :
                     if self.mission_step==0:
-                        realsense.autoset()
-                        logger.info("标定T265 开始延时")
+                        logger.info("开始延时")
                         self.time_count=time.time()
-                        while time.time()-self.time_count<5:
-                            pass
-                        self.t265sign=True
                         self.mission_step=1
                     elif self.mission_step==1:
+                        if time.time()-self.time_count<3:
+                            pass
+                        else:
+                            logger.info("前进")
+                            self.mission_step=2
+                    elif self.mission_step==2:
                         if self.pointcount<len(self.target) and self.iscvcap==False:
                             self.move_point(self.target[self.pointcount])
                         elif self.iscvcap==True:
                             self.mission_step=2
                             self.iscvcap=False
                             logger.info("发现火源 开始接近")
+                        else:
+                            logger.info("gg")
+                            self.mission_step=101
                     elif self.mission_step==2: #发现火源后处理阶段 处理完成后返回阶段1
+                        self.mission_step=101
                         pass
                     else:
                         self.end()
-                time.sleep(0.01)
+                time.sleep(0.05)
         def fc_take_off(self):
             self.com_fc[1]=1
         def gpio_set(self,gpion,value=0):
@@ -99,11 +112,14 @@ class mission(object) :
             x_pid=PID(0,point[0])
             y_pid=PID(0,point[1])
             yaw_pid=PID(1,0)
-            while (abs(self.xyz[0]-point[0])<threshold or abs(self.xyz[1]-point[1])<threshold) and self.iscvcap==False:
-                x_speed=x_pid.get_pid()
-                y_speed=y_pid.get_pid()
-                yaw_speed=yaw_pid.get_pid()
-                self.speed_set(x_speed,y_speed,yaw_speed)
-                logger.info("x:%f y:%f yaw:%f",x_speed,y_speed,yaw_speed)
+            while(abs(self.xyz[0]-point[0])>threshold or abs(self.xyz[1]-point[1])>threshold) and self.iscvcap==False:
+                self.xyz=realsense.get_actual_pos()
+                self.yaw=realsense.get_actual_yaw()
+                x_speed=x_pid.get_pid(self.xyz[0])
+                y_speed=y_pid.get_pid(self.xyz[1])
+                yaw_speed=yaw_pid.get_pid(self.yaw)
+                logger.info("x=%d,y=%d",self.xyz[0]-point[0],self.xyz[1]-point[1])
+                logger.info("xs=%d,ys=%d,yaws=%d",x_speed,y_speed,yaw_speed)
+                self.speed_set(x_speed,y_speed,-yaw_speed)
             if self.iscvcap==False:
                 self.pointcount+=1

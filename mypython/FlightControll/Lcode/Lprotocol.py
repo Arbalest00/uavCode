@@ -1,5 +1,6 @@
 import serial
 import threading
+import pickle
 import socket
 from typing import List
 from Lcode.Logger import logger
@@ -117,16 +118,17 @@ class Serial_gpio(object):
                     lock.release()
             time.sleep(0.05)
 class udp_terminal(object):
-    def __init__(self,ip='0.0.0.0',port=2887):
+    def __init__(self):
         self.udp_socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_socket.bind((ip,port))
         self.udp_listen_running=False
+        self.udp_send_running=False
         self.task_list=[]
         self.takeoff_sign=False
         self.fall_sign=False
         self.food_all_take=False
-    def listen_start(self):
+    def listen_start(self,IP,PORT):
         self.udp_listen_running=True
+        self.udp_socket.bind((IP,PORT))
         listen_thread=threading.Thread(target=udp_terminal.listen_udp,args=(self,))
         listen_thread.daemon=True
         listen_thread.start()
@@ -171,3 +173,16 @@ class udp_terminal(object):
     def tasksort(self):
         self.task_list.sort(key=lambda x:x[0],reverse=True)
         logger.info("任务列表排序后:%s",self.task_list)
+    
+    def send_start(self,IP,PORT,senddata):
+        self.udp_send_running=True
+        self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1) # 设置允许发送广播数据
+        send_thread=threading.Thread(target=udp_terminal.send_udp,args=(self,IP,PORT,senddata))
+        send_thread.daemon=True
+        send_thread.start()
+        logger.info("udp发送线程启动")
+    def send_udp(self,IP,PORT,senddata):
+        while self.udp_send_running==True:
+            changedata=pickle.dumps(senddata)
+            self.udp_socket.sendto(changedata,(IP,PORT))
+            time.sleep(0.05)

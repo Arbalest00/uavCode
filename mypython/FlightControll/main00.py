@@ -4,13 +4,14 @@ filename = "fc_log.log"
 if os.path.isfile(os.path.join(dir_path, filename)):
     os.remove(os.path.join(dir_path, filename))
 sys.path.append(os.path.abspath('./yolo_v2'))
+os.system("netsh wlan connect name= LESP32WF")
 #########################################  清除日志  #########################################
 from Lcode.global_variable import sp_side,lock
 import Lcode.Lprotocol
 import time
 from Lcode.Logger import logger
 from RadarDrivers_reconstruct.Radar import Radar
-from Lcode.Lmission.Lmission_fokr import mission
+from Lcode.Lmission.Lmission_final import mission
 ##############################################变量############################################
 rxbuffer_fc=[0,0,0]#飞控反传信息 任务模式/x积分值/y积分值
 rxbuffer_gpio=[0,0,0,0]#gpio反传信息,启动/P1/P2/模式
@@ -22,12 +23,12 @@ run_sign=False
 serial_fc.port_open()
 serial_fc.listen_start(rxbuffer_fc)
 serial_fc.send_start(com_fc) """
-serial_gpio=Lcode.Lprotocol.Serial_gpio("COM5",38400)
+""" serial_gpio=Lcode.Lprotocol.Serial_gpio("COM5",38400)
 serial_gpio.port_open()
-serial_gpio.send_start(com_gpio)
+serial_gpio.send_start(com_gpio) """
 #serial_gpio.listen_start(rxbuffer_gpio)
-#mission=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
-#mission.run()
+mission=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
+mission.run() 
 """ radar=Radar()
 radar.start('COM3','LD06')
 radar.start_resolve_pose() """
