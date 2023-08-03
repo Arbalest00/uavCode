@@ -122,10 +122,8 @@ class udp_terminal(object):
         self.udp_socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_listen_running=False
         self.udp_send_running=False
-        self.task_list=[]
         self.takeoff_sign=False
-        self.fall_sign=False
-        self.food_all_take=False
+        self.task_hjm=False
     def listen_start(self,IP,PORT):
         self.udp_listen_running=True
         self.udp_socket.bind((IP,PORT))
@@ -142,33 +140,14 @@ class udp_terminal(object):
         while self.udp_listen_running==True:
             data, client_address = self.udp_socket.recvfrom(1024)
             #logger.info("接收到的数据是%s",data)
-            if state==0 and data==b'\xaa':
-                received_data.clear()
-                state=1
-                #print('1')
-            elif state==1 and len(received_data)<2:
-                received_data.append(int(data.decode()))
-                #print('2')
-            elif len(received_data)==2 and data==b'\xff':
-                #print('3')
-                if received_data[0]!=0xA0:
-                    received_data.append(0)
-                    self.task_list.append(received_data[:])
-                    self.food_all_take=False
-                    self.tasksort()
-                    logger.info("点和优先级是:%s",received_data)
-                    logger.info("任务列表是:%s",self.task_list)
-                    logger.info("新任务下达，返回出发点")
-                elif received_data[0]==0xA0:
-                    if received_data[1]==0xA0:
-                        self.fall_sign=True
-                        logger.info("降落取餐")
-                    elif received_data[1]==0xA1:
-                        self.takeoff_sign=True
-                        logger.info("起飞前往下一点")
-                else:
-                    pass
-                state=0
+            realdata=pickle.loads(data)
+            if realdata[0]==170 and realdata[3]==255:
+                if realdata[1]==160 and realdata[2]==161:
+                    self.task_number=1
+                elif realdata[1]==160 and realdata[2]==162:
+                    self.task_number=2
+                elif realdata[1]==192 and realdata[2]==192:
+                    self.task_hjm=True
             time.sleep(0.02)
     def tasksort(self):
         self.task_list.sort(key=lambda x:x[0],reverse=True)

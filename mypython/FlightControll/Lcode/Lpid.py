@@ -3,7 +3,7 @@ class PID:
     def __init__(self,type=0,target=0) -> None:
         self.xyp=0.5
         self.xyi=0.003
-        self.xyd=0.012
+        self.xyd=0.018
         self.yawp=2.5
         self.yawi=0.3
         self.yawd=0.02

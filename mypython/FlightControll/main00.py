@@ -4,7 +4,7 @@ filename = "fc_log.log"
 if os.path.isfile(os.path.join(dir_path, filename)):
     os.remove(os.path.join(dir_path, filename))
 sys.path.append(os.path.abspath('./yolo_v2'))
-os.system("netsh wlan connect name= LESP32WF")
+#os.system("netsh wlan connect name= LESP32WF")
 #########################################  清除日志  #########################################
 from Lcode.global_variable import sp_side,lock
 import Lcode.Lprotocol
@@ -19,7 +19,7 @@ com_fc = [170, 0, sp_side, sp_side, 120, sp_side, 0,sp_side, 255]#发送给飞�
 com_gpio =[170,0,0,0,0,1,1,1,1,255]#发送给esp32/arduino的数据 GPIO输出 帧头/低功率输出/高功率输出
 run_sign=False
 ##########################################  任务  #############################################
-""" serial_fc=Lcode.Lprotocol.Serial_fc("COM4",460800)
+""" serial_fc=Lcode.Lprotocol.Serial_fc("COM3",460800)
 serial_fc.port_open()
 serial_fc.listen_start(rxbuffer_fc)
 serial_fc.send_start(com_fc) """

@@ -1,18 +1,24 @@
 import threading
 import time
 import math
+import pickle
 from typing import List
 from Lcode.Lpid import PID
 from Lcode.Logger import logger
 from Lcode.global_variable import sp_side,lock,task_start_sign
-from Lcode.Lprotocol import udp_terminal
+#from Lcode.Lprotocol import udp_terminal
+import socket
 from RadarDrivers_reconstruct.Radar import Radar
-from t265_realsense import t265
-put_height=50
-fly_height=150
+#from t265_realsense import t265
+radar=Radar()
+radar.start('COM3','LD06')
+put_height=90
+fly_height=170  
 #realsense=t265.t265_class()
-threshold=5
-udp=udp_terminal()
+threshold=7
+udp=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+address=("255.255.255.255",2887)
 class mission(object) :
         #左正右负，前正后负
         def __init__(self,fc_data:List[int],com_fc:List[int],com_gpio:List[int],gpio_data:List[int]) -> None:
@@ -23,8 +29,10 @@ class mission(object) :
             self.mission_step=0
             self.task_running=False
             self.time_count=0
+            self.send_count=0
             self.change_count=0
             self.t265sign=False
+            self.radarsign=False
             self.x_intergral_base=0
             self.y_intergral_base=0
             self.pointcount=0
@@ -32,25 +40,30 @@ class mission(object) :
             self.xyz=[0,0,0]
             self.xy=[170,int(self.xyz[0]),int(self.xyz[1]),255]
             self.yaw=0
-            self.target=[[0,-400],[320,-400],[320,0],[80,0],[80,-320],[240,-320],[240,-80],[160,-80],[160,-240],[0,0]]
+            self.radarbias=[0,0]
+            self.target=[[0,-300],[200,-300],[200,0],[80,0],[80,-200],[140,-200],[140,-80],[60,-80],[60,-140],[0,0]]
         def run(self):
             self.task_running=True
+            radar.start_resolve_pose()
+            self.time_count=time.time()
+            logger.info("计算雷达偏置")
+            while time.time()-self.time_count<2:
+                pass
+            self.radarbias=radar.rt_pose
+            for i in range(len(self.target)):
+                self.target[i][0] += self.radarbias[0]
+                self.target[i][1] += self.radarbias[1]
+            self.time_count=0
             #realsense.autoset()
-            udp.send_start("192.168.4.255",2887,self.xy)
-            self.t265sign=True
             task_thread=threading.Thread(target=self.task)
             task_thread.daemon=True
             task_thread.start()
             self.mission_step=0
-            logger.info("任务启动 t265标定")
+            logger.info("偏置完成 偏置值为:%s任务启动 ",self.radarbias)
             pass
         def task(self):
             global put_height,fly_height
-            while self.task_running==True :
-                """ if self.t265sign==True:
-                        self.xyz=realsense.get_actual_pos()
-                        self.yaw=realsense.get_actual_yaw()
-                        logger.info("t265返回数据为%s",self.xyz) """
+            while self.task_running==True:
                 if task_start_sign.value==True :
                     if self.mission_step==0:
                         logger.info("开始延时")
@@ -113,11 +126,19 @@ class mission(object) :
             y_pid=PID(0,point[1])
             yaw_pid=PID(1,0)
             while(abs(self.xyz[0]-point[0])>threshold or abs(self.xyz[1]-point[1])>threshold) and self.iscvcap==False:
-                self.xyz=realsense.get_actual_pos()
-                self.yaw=realsense.get_actual_yaw()
+                self.xyz=radar.rt_pose[0:1]
+                self.yaw=radar.rt_pose[2]
+                if self.send_count<4:
+                            self.send_count+=1
+                else:
+                            self.xy=[170,int(self.xyz[0]),int(self.xyz[1]),255]
+                            changedata=pickle.dumps(self.xy)
+                            udp.sendto(changedata,address)
+                            self.send_count=0
                 x_speed=x_pid.get_pid(self.xyz[0])
                 y_speed=y_pid.get_pid(self.xyz[1])
                 yaw_speed=yaw_pid.get_pid(self.yaw)
+                logger.info("雷达返回数据为%s",self.xyz) 
                 logger.info("x=%d,y=%d",self.xyz[0]-point[0],self.xyz[1]-point[1])
                 logger.info("xs=%d,ys=%d,yaws=%d",x_speed,y_speed,yaw_speed)
                 self.speed_set(x_speed,y_speed,-yaw_speed)

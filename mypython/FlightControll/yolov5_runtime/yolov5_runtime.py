@@ -201,7 +201,7 @@ class camera:
 
     
 # test demo
-if __name__=="__main__":
+""" if __name__=="__main__":
     test = Detector()
     test.DEBUG = True
     test.dml = False
@@ -221,6 +221,6 @@ if __name__=="__main__":
             print("FPS:", round(fps, 2))
             frame_count = 0
             start_time = current_time
-
+ """
 # img = cv2.imread("img2-67.jpg")
 # test.test_fps(img)
