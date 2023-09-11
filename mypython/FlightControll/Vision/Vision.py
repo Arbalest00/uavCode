@@ -1,11 +1,10 @@
 import time
 from typing import List, Optional, Tuple, Union
-from CR_PM.PID import DeltaPID
 import cv2
 import numpy as np
 from pyzbar import pyzbar
 from scipy import ndimage
-from Vision_Net import FastestDetOnnx, FastestDet
+from Vision.Vision_Net import FastestDetOnnx, FastestDet
 
 deep = FastestDetOnnx(drawOutput=True)
 

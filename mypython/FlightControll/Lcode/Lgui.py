@@ -59,7 +59,7 @@ class tk_gui:
         self.label.image=photo
         self.label.place(x=0, y=0)
         #self.label.after(1000, self.show_img, img)
-        print("更新")
+        #print("更新")
         #cv2.imshow("img",img)
     def start(self):
         self.gui_window()
@@ -72,10 +72,11 @@ class cv_draw:
 
     def draw(self, points):
         image = cv2.imread('base.png')
+        #image=img.resize((480,400))
         for i in range(len(points)):
-            x =( -points[i][1] + 70)
-            y =( -points[i][0] + 730)
-            cv2.circle(image, (x,y), 4, (0, 0, 255), -1)
+            x =( -points[i][1] + 35)
+            y =( -points[i][0] + 365)
+            cv2.circle(image, (x,y), 2, (0, 0, 255), -1)
         return image
     
     def show_draw_res(self,arr):

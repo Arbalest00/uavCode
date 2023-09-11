@@ -180,7 +180,7 @@ void UserTask_OneKeyCmd(void)//一键任务
 						
 				}
 				break;
-1				case 6://树莓派控制阶段//光流给爷死
+				case 6://树莓派控制阶段//光流给爷死
 				{
 					if(received_data.next_task_sign==1)
 					{
@@ -211,5 +211,6 @@ void UserTask_OneKeyCmd(void)//一键任务
 			mission_step = 0;
 			mission_stage=0;
 			tar_setdata(0,0,0,0);
+			one_key_takeoff_f=0;
 		}
 }

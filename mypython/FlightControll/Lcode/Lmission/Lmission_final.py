@@ -11,14 +11,19 @@ import socket
 from RadarDrivers_reconstruct.Radar import Radar
 #from t265_realsense import t265
 radar=Radar()
-radar.start('COM3','LD06')
+radar.start('/dev/ttyUSBradar','LD06')
+radar.start_resolve_pose(size=1200)
 put_height=90
-fly_height=170  
+fly_height=171  
 #realsense=t265.t265_class()
 threshold=7
+posthreshold=20
+stxt=[170,64,64,64,255]
+sendstxt=pickle.dumps(stxt)
 udp=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 address=("255.255.255.255",2887)
+udp.sendto(sendstxt,address)
 class mission(object) :
         #左正右负，前正后负
         def __init__(self,fc_data:List[int],com_fc:List[int],com_gpio:List[int],gpio_data:List[int]) -> None:
@@ -30,6 +35,7 @@ class mission(object) :
             self.task_running=False
             self.time_count=0
             self.send_count=0
+            self.radar_wait_time=0
             self.change_count=0
             self.t265sign=False
             self.radarsign=False
@@ -38,39 +44,56 @@ class mission(object) :
             self.pointcount=0
             self.iscvcap=False
             self.xyz=[0,0,0]
-            self.xy=[170,int(self.xyz[0]),int(self.xyz[1]),255]
+            self.xy=[]
             self.yaw=0
             self.radarbias=[0,0]
-            self.target=[[0,-300],[200,-300],[200,0],[80,0],[80,-200],[140,-200],[140,-80],[60,-80],[60,-140],[0,0]]
+            self.target=[[0,-380],[80,-380],[80,20],[160,20],[160,-380],[240,-380],[240,20],[300,20],[300,-380],[0,0]]
         def run(self):
-            self.task_running=True
-            radar.start_resolve_pose()
-            self.time_count=time.time()
-            logger.info("计算雷达偏置")
-            while time.time()-self.time_count<2:
-                pass
-            self.radarbias=radar.rt_pose
-            for i in range(len(self.target)):
-                self.target[i][0] += self.radarbias[0]
-                self.target[i][1] += self.radarbias[1]
+            self.radar_wait_time=time.time()
+            self.gpio_set(5,1)
             self.time_count=0
             #realsense.autoset()
+            self.task_running=True
             task_thread=threading.Thread(target=self.task)
             task_thread.daemon=True
             task_thread.start()
             self.mission_step=0
-            logger.info("偏置完成 偏置值为:%s任务启动 ",self.radarbias)
+            logger.info("wait for radar ")
             pass
         def task(self):
             global put_height,fly_height
             while self.task_running==True:
+                if time.time()-self.radar_wait_time>10 and self.radarsign==False:
+                    logger.info("计算雷达偏置")
+                    self.radarbias=[60,470] 
+                    for i in range(len(self.target)):
+                        self.target[i][0] += int(self.radarbias[0])
+                        self.target[i][1] += int(self.radarbias[1])
+                    self.radarsign=True
+                    logger.info(self.radarbias)
+                    self.fc_take_off()
+                    self.height_set(fly_height)
+                    logger.info("take off")
+                if self.radarsign==True:
+                    self.xyz=radar.rt_pose
+                    self.yaw=radar.rt_pose[2]
+                    if self.send_count<2:
+                            self.send_count+=1
+                    else:
+                            self.xy=[170,int(self.xyz[0]-self.radarbias[0]),int(self.xyz[1]-self.radarbias[1]),0,255]
+                            changedata=pickle.dumps(self.xy)
+                            #print(self.xy)
+                            udp.sendto(changedata,address)
+                            self.send_count=0
                 if task_start_sign.value==True :
                     if self.mission_step==0:
                         logger.info("开始延时")
                         self.time_count=time.time()
                         self.mission_step=1
+                        self.gpio_set(5,0)
                     elif self.mission_step==1:
-                        if time.time()-self.time_count<3:
+                        if time.time()-self.time_count<0:
+                            
                             pass
                         else:
                             logger.info("前进")
@@ -85,7 +108,7 @@ class mission(object) :
                         else:
                             logger.info("gg")
                             self.mission_step=101
-                    elif self.mission_step==2: #发现火源后处理阶段 处理完成后返回阶段1
+                    elif self.mission_step==3: #发现火源后处理阶段 处理完成后返回阶段1
                         self.mission_step=101
                         pass
                     else:
@@ -104,6 +127,7 @@ class mission(object) :
         def end(self):
             lock.acquire()
             self.com_fc[6]=101
+            self.com_fc[1]=0
             lock.release()
             logger.info("任务结束")
         def rerun(self):
@@ -125,22 +149,36 @@ class mission(object) :
             x_pid=PID(0,point[0])
             y_pid=PID(0,point[1])
             yaw_pid=PID(1,0)
-            while(abs(self.xyz[0]-point[0])>threshold or abs(self.xyz[1]-point[1])>threshold) and self.iscvcap==False:
-                self.xyz=radar.rt_pose[0:1]
-                self.yaw=radar.rt_pose[2]
-                if self.send_count<4:
+            x_speed=x_pid.get_pid(radar.rt_pose[0])
+            y_speed=y_pid.get_pid(radar.rt_pose[1])
+            yaw_speed=yaw_pid.get_pid(radar.rt_pose[2])
+            while((abs(x_speed)>threshold or abs(y_speed)>threshold)) or((abs(self.xyz[0]-point[0])>posthreshold or abs(self.xyz[1]-point[1])>posthreshold)) and self.iscvcap==False:
+                if self.send_count<2:
                             self.send_count+=1
                 else:
-                            self.xy=[170,int(self.xyz[0]),int(self.xyz[1]),255]
+                            self.xy=[170,int(radar.rt_pose[0]-self.radarbias[0]),int(radar.rt_pose[1]-self.radarbias[1]),0,255]
                             changedata=pickle.dumps(self.xy)
                             udp.sendto(changedata,address)
                             self.send_count=0
-                x_speed=x_pid.get_pid(self.xyz[0])
-                y_speed=y_pid.get_pid(self.xyz[1])
-                yaw_speed=yaw_pid.get_pid(self.yaw)
-                logger.info("雷达返回数据为%s",self.xyz) 
-                logger.info("x=%d,y=%d",self.xyz[0]-point[0],self.xyz[1]-point[1])
-                logger.info("xs=%d,ys=%d,yaws=%d",x_speed,y_speed,yaw_speed)
+                x_speed=x_pid.get_pid(radar.rt_pose[0])
+                y_speed=y_pid.get_pid(radar.rt_pose[1])
+                yaw_speed=yaw_pid.get_pid(radar.rt_pose[2])
+                print("雷达返回数据为%s",radar.rt_pose) 
+                print("dx=%d,dy=%d",radar.rt_pose[0]-point[0],radar.rt_pose[1]-point[1])
+                print("xs=%d,ys=%d,yaws=%d",x_speed,y_speed,yaw_speed)
                 self.speed_set(x_speed,y_speed,-yaw_speed)
+                time.sleep(0.03)
+            #self.speed_set(0,0,0)
             if self.iscvcap==False:
                 self.pointcount+=1
+                try:
+                    x_pid=PID(0,self.target[self.pointcount][0])
+                    y_pid=PID(0,self.target[self.pointcount][1])
+                    x_speed=x_pid.get_pid(radar.rt_pose[0])
+                    y_speed=y_pid.get_pid(radar.rt_pose[1])
+                    if y_speed>0:
+                        y_speed=y_speed*1
+                    yaw_speed=yaw_pid.get_pid(radar.rt_pose[2])
+                    self.speed_set(x_speed,y_speed,-yaw_speed)
+                except:
+                    pass

@@ -5,8 +5,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import math as m
 import cv2
-
-
+import threading
+from Lcode.Logger import logger
 class t265_class:
     first_flag = 1
     time_start = 0
@@ -16,7 +16,8 @@ class t265_class:
     map_size = 1000 # 地图大小
     point_cache_size = 10000 # 地图点缓存大小
     set_time = 3 # 自动标定时间
-
+    t265_pose=[0,0,0]
+    update_running=False
     def __init__(self):
         """
         初始化t265
@@ -304,8 +305,9 @@ class t265_class:
             self.time_start = time.time()
             while True:
                 if(time.time() - self.time_start > self.set_time):
-                    self.base_pos = self.get_raw_data()[1]
-                    self.base_yaw = self.get_actual_yaw()
+                    raw_data = self.get_raw_data()
+                    self.base_pos = raw_data[1]
+                    self.base_yaw = self.get_actual_yaw(raw_data)
                     break
             print('t265 autoset end')
         else:
@@ -320,37 +322,37 @@ class t265_class:
         self.xy_route = []
         self.autoset()
 
-    def get_actual_pos(self):
+    def get_actual_pos(self, raw_data):
         """
         获取t265的实际位置,已经自动标定
         返回值: [x,y,z],单位: cm
         """
         self.autoset()
-        data_tmp = self.get_raw_data()[1]
+        data_tmp = raw_data[1]
         res_1 = 100*(data_tmp[0] - self.base_pos[0])
         res_2 = 100*(data_tmp[1] - self.base_pos[1])
         res_3 = 100*(data_tmp[2] - self.base_pos[2])
         res = [round(res_1,3), round(res_2,3), round(res_3,3)]
         return res
     
-    def get_actual_yaw(self):
+    def get_actual_yaw(self, raw_data):
         """
         获取t265的实际yaw,未标定
         返回值: [x,y,z],单位: cm
         """
-        data_euler = self.get_raw_data()[5]
-        data_quaternion = self.get_raw_data()[4]
+        data_euler = raw_data[5]
+        data_quaternion = raw_data[4]
         res = self.coordinate_transform(data_quaternion, data_euler)
         ret_quaternion = res[0]
         ret_euler = res[1]
         yaw = ret_euler[2] - self.base_yaw
         return yaw
     
-    def draw_xy_route(self):
+    def draw_xy_route(self, raw_data):
         """
         画平面轨迹
         """
-        xyz = self.get_actual_pos()
+        xyz = self.get_actual_pos(raw_data)
         tmp_x = xyz[0]
         tmp_y = xyz[1]
         tmp_z = xyz[2]
@@ -368,43 +370,53 @@ class t265_class:
             print('z',z)
             bias = int(self.map_size/2)
             cv2.circle(image, (x + bias, y + bias), 1, (255, 255, 255), -1)
-        # # 在图像上显示文本
-        # text = str([x, y])
-        # org = (x - 30, y - 30)  # 文本的起始坐标
-        # fontFace = cv2.FONT_HERSHEY_SIMPLEX
-        # fontScale = 0.4
-        # color = (0, 255, 0)  # 文本颜色为绿色
-        # thickness = 1
-        # # 在图像上绘制文本
-        # cv2.putText(image, text, org, fontFace,
-        #             fontScale, color, thickness)
         if(len(self.xy_route)>self.point_cache_size):
             self.xy_route = []
         return image,ret_point
+    
+    def normalize_angle(self, angle):
+        normalized_angle = angle % 360.0
+        if normalized_angle < 0:
+            normalized_angle += 360.0
+        if(normalized_angle > 180):
+            normalized_angle = normalized_angle - 360
+        return normalized_angle
 
+    def get_pos(self):
+        """
+        返回自动标定后的t265位置和yaw,yaw是-180到180的角度
+        """
+        raw_data = self.get_raw_data()
+        if(raw_data != None):
+            pos = self.get_actual_pos(raw_data)
+            yaw = self.get_actual_yaw(raw_data)
+            yaw = self.normalize_angle(yaw)
+            yaw = round(yaw,3)
+            return [pos, yaw]
+        else:
+            return None
 
-# if __name__ == '__main__':
-#     t265 = t265()
-#     # t265.DEBUG = True
-#     # t265.fps_test()
-#     t265.show_route_test(1000)
+    def get_car_pos(self):
+        """
+        返回小车xy坐标和yaw轴(已经自动标定),yaw是-180到180的角度
+        """
+        ret = self.get_pos()
+        if(ret != None):
+            x = ret[0][0]
+            y = ret[0][1]
+            yaw = ret[1]
+            return [x, y, yaw]
+        else:
+            return None
+    def start_update(self):
+        t265_thread=threading.Thread(target=self.t265_update)
+        t265_thread.daemon=True
+        t265_thread.start()
+        self.update_running=True
+        logger.info("t265自动更新线程启动")
+    def t265_update(self):
+        self.autoset()
+        while self.update_running==True:
+            self.t265_pose=self.get_car_pos()
+            time.sleep(0.02)
 
-
-""" t265 = t265_class()
-ts = time.time()
-while True:
-    # ret = t265.get_actual_pos()
-    # print(ret)
-    tn = time.time()
-    if(tn - ts > 0.05):
-        ts = tn
-        ret = t265.draw_xy_route()
-        img = ret[0]
-        circle = ret[1]
-        x = circle[0]
-        y = circle[1]
-        # print('x: ',x,' y: ',y)
-        cv2.imshow('img', img)
-        cv2.waitKey(1)
-cv2.destroyAllWindows()
- """
