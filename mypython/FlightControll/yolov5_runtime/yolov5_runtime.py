@@ -169,7 +169,7 @@ class camera:
     width = 640
     height = 480
     fps = 60
-    cam_id = 1 # 摄像头id
+    cam_id = 0 # 摄像头id
 
     def __init__(self) -> None:
         try:
@@ -201,7 +201,7 @@ class camera:
 
     
 # test demo
-""" if __name__=="__main__":
+if __name__=="__main__":
     test = Detector()
     test.DEBUG = True
     test.dml = False
@@ -221,6 +221,5 @@ class camera:
             print("FPS:", round(fps, 2))
             frame_count = 0
             start_time = current_time
- """
 # img = cv2.imread("img2-67.jpg")
 # test.test_fps(img)

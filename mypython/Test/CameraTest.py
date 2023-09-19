@@ -2,7 +2,7 @@ import cv2
 count = 0       # 定义拍照计数变量
 def main():
     global count
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640.0)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480.0)
     cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
