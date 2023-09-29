@@ -69,7 +69,7 @@ class Detector():
         if self.dml:
             sess = onnxruntime.InferenceSession(self.weights,providers=['DmlExecutionProvider','CPUExecutionProvider'])
         else:
-            sess = onnxruntime.InferenceSession(self.weights,providers=['CPUExecutionProvider'])  # 加载模型权重
+            sess = onnxruntime.InferenceSession(self.weights,providers=['CUDAExecutionProvider'])  # 加载模型权重
         self.input_name = sess.get_inputs()[0].name  # 获得输入节点
         output_names = []
         for i in range(len(sess.get_outputs())):
@@ -173,7 +173,7 @@ class camera:
 
     def __init__(self) -> None:
         try:
-            self.cap = cv2.VideoCapture(self.cam_id, cv2.CAP_DSHOW)
+            self.cap = cv2.VideoCapture(self.cam_id)
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
             self.cap.set(cv2.CAP_PROP_FPS, self.fps)
@@ -208,6 +208,7 @@ if __name__=="__main__":
     cam = camera()
     start_time = time.time()
     frame_count = 0
+    lasttime=0
     while True:
         frame = cam.get_frame()
         res = test.runtime(frame)
@@ -216,10 +217,14 @@ if __name__=="__main__":
         frame_count += 1
         current_time = time.time()
         elapsed_time = current_time - start_time
+        dt=current_time-lasttime
+        lasttime=current_time
+        print("dt:",dt)
         if elapsed_time > 1:  # 每隔一秒钟输出一次帧数
             fps = frame_count / elapsed_time
             print("FPS:", round(fps, 2))
             frame_count = 0
             start_time = current_time
+        cv2.waitKey(1)
 # img = cv2.imread("img2-67.jpg")
 # test.test_fps(img)
