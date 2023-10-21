@@ -4,7 +4,7 @@ import math
 from typing import List
 from func.pid import PID
 from func.Logger import logger
-from func.global_variable import sp_side,lock,task_start_sign
+from func.global_variable import speed_bias,lock,task_start_sign
 from external_device.RadarDrivers_reconstruct.Radar import Radar
 from external_device.camera_lib.camera import cv_class
 from external_device.t265_realsense.t265 import t265_class
@@ -25,12 +25,11 @@ class mission(mission_general):
         if self.cv_flag==True:
             self.cv_init()
     def task(self):
-        global put_height,fly_height,data_source
+        global put_height,fly_height
         while self.task_running==True :
             if task_start_sign.value==True :
                 if self.mission_step==0:
                     self.mission_step=1
-                    
                     logger.info("进入程控阶段1")
                     pass
                 else:

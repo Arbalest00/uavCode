@@ -4,7 +4,7 @@ import math
 from typing import List
 from func.pid import PID
 from func.Logger import logger
-from func.global_variable import sp_side,lock,task_start_sign
+from func.global_variable import speed_bias,lock,task_start_sign
 from external_device.RadarDrivers_reconstruct.Radar import Radar
 from external_device.camera_lib.camera import cv_class
 from external_device.t265_realsense.t265 import t265_class
@@ -48,9 +48,9 @@ class mission_general(object) :
         def gpio_set(self,gpion,value=0):
             self.com_gpio[gpion]=value
         def speed_set(self,x=0,y=0,yaw=0):
-            self.com_fc[2]=x+sp_side
-            self.com_fc[3]=y+sp_side
-            self.com_fc[5]=yaw+sp_side
+            self.com_fc[2]=x+speed_bias
+            self.com_fc[3]=y+speed_bias
+            self.com_fc[5]=yaw+speed_bias
         def height_set(self,height):
             self.com_fc[4]=height
         def close_height_set(self):
@@ -75,10 +75,10 @@ class mission_general(object) :
             self.com_gpio[2]=64
         def com_init(self):
             self.com_fc[1]=0
-            self.com_fc[2]=sp_side
-            self.com_fc[3]=sp_side
+            self.com_fc[2]=speed_bias
+            self.com_fc[3]=speed_bias
             self.com_fc[4]=fly_height
-            self.com_fc[5]=sp_side
+            self.com_fc[5]=speed_bias
             self.com_fc[6]=0
         def radar_init(self):
             self.radar=Radar()
