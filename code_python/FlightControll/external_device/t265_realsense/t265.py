@@ -420,3 +420,9 @@ class t265_class:
             self.t265_pose=self.get_car_pos()
             time.sleep(0.02)
 
+if __name__=='__main__':
+    t265=t265_class()
+    t265.start_update()
+    while True:
+        print(t265.t265_pose)
+        time.sleep(0.1)

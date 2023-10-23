@@ -2,7 +2,7 @@
 import serial
 import threading
 from func.Logger import logger
-from RadarDrivers_reconstruct.RadarMapApplication import radar_map_application
+from external_device.RadarDrivers_reconstruct.RadarMapApplication import radar_map_application
 
 
 class Radar(radar_map_application):

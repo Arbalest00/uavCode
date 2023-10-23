@@ -3,7 +3,7 @@ import time
 import struct
 import serial
 from func.Logger import logger
-from RadarDrivers_reconstruct.RadarMapBase import Map_360, Radar_Package
+from external_device.RadarDrivers_reconstruct.RadarMapBase import Map_360, Radar_Package
 
 
 class radar_serial_updater(Map_360):

@@ -258,7 +258,7 @@ class FastestDetOnnx(FastestDet):
         self.classes = list(map(lambda x: x.strip(), open(path_names, "r").readlines()))
         self.inpWidth = 500
         self.inpHeight = 500
-        self.session = onnxruntime.InferenceSession(path_onnx)
+        self.session = onnxruntime.InferenceSession(path_onnx,providers=["CUDAExecutionProvider"])
         self.confThreshold = confThreshold
         self.nmsThreshold = nmsThreshold
         self.drawOutput = drawOutput

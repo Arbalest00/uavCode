@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from pyzbar import pyzbar
 from scipy import ndimage
-from Vision.Vision_Net import FastestDetOnnx, FastestDet
+from external_device.camera_lib.Vision.Vision_Net import FastestDetOnnx, FastestDet
 
 deep = FastestDetOnnx(drawOutput=True)
 

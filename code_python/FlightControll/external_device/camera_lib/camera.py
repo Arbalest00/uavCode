@@ -1,10 +1,9 @@
 import cv2
 from func.Logger import logger
 import threading
-from RadarDrivers_reconstruct.Radar import Radar
 from func.global_variable import lock
 import time
-import Vision.Vision
+from external_device.camera_lib.Vision import Vision
 import numpy as np 
 class cv_class(object):
     def __init__(self,width=640,height=480) -> None:

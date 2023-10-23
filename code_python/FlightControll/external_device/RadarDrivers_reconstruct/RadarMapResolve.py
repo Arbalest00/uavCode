@@ -1,16 +1,16 @@
 import numpy as np
 import cv2
 from scipy.signal import find_peaks
-from typing import List, Literal
-from RadarDrivers_reconstruct.RadarMapBase import Point_2D
-from RadarDrivers_reconstruct.RadarSerialUpdater import radar_serial_updater
+from typing import List, Literal,Tuple
+from external_device.RadarDrivers_reconstruct.RadarMapBase import Point_2D
+from external_device.RadarDrivers_reconstruct.RadarSerialUpdater import radar_serial_updater
 from time import sleep
 # from RadarDrivers_reconstruct.test import radar_cv
 
 
 def get_point_line_distance(
     x1, y1, x2, y2, x3, y3, line_type: Literal[0, 1] = 0
-) -> tuple[float, float]:
+) -> Tuple[float, float]:
     """
     计算点到线的距离
     p1: 目标点
