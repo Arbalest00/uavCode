@@ -3,8 +3,9 @@ import threading
 import serial
 import cv2
 import numpy as np
-from RadarDrivers_reconstruct.RadarMapResolve import radar_map_resolve
-from RadarDrivers_reconstruct.RadarMapBase import Point_2D
+from typing import List
+from external_device.RadarDrivers_reconstruct.RadarMapResolve import radar_map_resolve
+from external_device.RadarDrivers_reconstruct.RadarMapBase import Point_2D
 from func.Logger import logger
 
 
@@ -243,7 +244,7 @@ class radar_map_application(radar_map_resolve):
         """
         self._fp_flag = False
 
-    def _update_target_point(self, points: list[Point_2D]):
+    def _update_target_point(self, points: List[Point_2D]):
         """
         更新目标点位置
         """
