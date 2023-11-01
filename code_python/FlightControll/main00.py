@@ -32,7 +32,7 @@ serial_gpio.listen_start(rxbuffer_gpio) """
 terminal.listen_start(recv_address,recv_port) """
 #mission=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
 #mission.run()
-#module_test.t265_test()
+module_test.t265_test()
 #module_test.Radar_test('/dev/ttyUSB0')
 while(1):
     time.sleep(0.1)
