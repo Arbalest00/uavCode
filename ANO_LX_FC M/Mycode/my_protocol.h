@@ -3,15 +3,15 @@
 #include "Drv_AnoOf.h"
 #ifndef _MY_PROTOCOL_H_
 #define _MY_PROTOCOL_H_
-///////////////////////////////////////±äÁ¿
+///////////////////////////////////////ï¿½ï¿½ï¿½ï¿½
 struct sdata
 {
-	s16 com_x;//x·½ÏòÖ¸Áî
-	s16 com_y;//y·½ÏòÖ¸Áî
-	s16 com_z;//z·½ÏòÖ¸Áî
-	s16 com_yaw;//yawÖ¸Áî
+	s16 com_x;//xï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+	s16 com_y;//yï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+	s16 com_z;//zï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+	s16 com_yaw;//yawÖ¸ï¿½ï¿½
 	u8 task_sta;//
-	u8 next_task_sign;//½×¶ÎÇÐ»»Ö¸Áî
+	u8 next_task_sign;//ï¿½×¶ï¿½ï¿½Ð»ï¿½Ö¸ï¿½ï¿½
 	s16 sp_side;
 };
 struct PID_inc
@@ -24,6 +24,8 @@ struct PID_inc
 	s32 err_current;
 	s32 err_last;
 	s32 err_previous;
+	s32 err_sum;
+	float last_out;
 };
 extern u8 RxBuffer[256];
 extern u8 LidarBuffer[256];
@@ -31,7 +33,7 @@ extern u8 pi_receive_done_sign;
 extern u8 lidar_receive_done_sign;
 extern u8 task_mode;
 extern s16 CSPX,CSPY;
-///////////////////////////////////////½á¹¹Ìå
+///////////////////////////////////////ï¿½á¹¹ï¿½ï¿½
 struct lidar_data
 {
 	u16 lidar_speed;
@@ -42,7 +44,7 @@ struct lidar_data
 	u16 timestamp;
 	u8 crc;
 };
-///////////////////////////////////////º¯Êý
+///////////////////////////////////////ï¿½ï¿½ï¿½ï¿½
 void my_spcal(s16,s16);
 void pi_receive( u8 );
 void pi_send();

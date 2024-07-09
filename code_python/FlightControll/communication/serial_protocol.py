@@ -71,6 +71,10 @@ class Serial_fc(object):
     def send_end(self):
         self.fcsend_running=False
         logger.info("飞控串口发送线程关闭")
+    def start_transmit(self,comlist:List[int],rxbuffer:List[int]):
+        self.port_open()
+        self.listen_start(rxbuffer)
+        self.send_start(comlist)
         
 class Serial_gpio(object):
     def __init__(self,port,baudrate):
@@ -122,3 +126,7 @@ class Serial_gpio(object):
                         logger.info(rxbuffer)
                     lock.release()
             time.sleep(0.05)
+    def start_transmit(self,comlist:List[int],rxbuffer:List[int]):
+        self.port_open()
+        self.listen_start(rxbuffer)
+        self.send_start(comlist)

@@ -20,19 +20,19 @@ import module_test
 recv_address='0.0.0.0'
 recv_port=3333 """
 ##########################################  任务  #############################################
-# serial_fc=Serial_fc("/dev/ttyAMA0",460800)
-# serial_fc.port_open()
-# serial_fc.listen_start(rxbuffer_fc)
-# serial_fc.send_start(com_fc)
+""" serial_fc=Serial_fc("/dev/ttyAMA0",460800)
+serial_fc.start_transmit() """
+
 """ serial_gpio=Serial_gpio("/dev/ttyUSBArduino",38400)
-serial_gpio.port_open()
-serial_gpio.send_start(com_gpio)
-serial_gpio.listen_start(rxbuffer_gpio) """
+serial_gpio.start_transmit() """
+
 """ terminal=communication.udp_protocol.udp_terminal()
 terminal.listen_start(recv_address,recv_port) """
-#mission=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
-#mission.run()
-module_test.t265_test()
-#module_test.Radar_test('/dev/ttyUSB0')
+
+""" mission=mission(rxbuffer_fc,com_fc,com_gpio,rxbuffer_gpio)
+mission.run() """
+
+""" module_test.t265_test()
+module_test.Radar_test('/dev/ttyUSB0') """
 while(1):
     time.sleep(0.1)

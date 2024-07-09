@@ -10,7 +10,7 @@ from external_device.camera_lib.camera import cv_class
 from external_device.t265_realsense.t265 import t265_class
 put_height=50
 fly_height=120
-class mission_general(object) :
+class mission_general(object) :#任务类
         #左正右负，前正后负
         def __init__(self,fc_data:List[int],com_fc:List[int],com_gpio:List[int],gpio_data:List[int]) -> None:
             self.fc_data=fc_data
@@ -36,13 +36,17 @@ class mission_general(object) :
             global put_height,fly_height
             while self.task_running==True :
                 if task_start_sign.value==True :
-                    if self.mission_step==0:
-                        self.mission_step=1
-                        self.P1=self.target[self.gpio_data[2]]
-                        self.P2=self.target[self.gpio_data[3]]-self.target[self.gpio_data[2]]
-                        logger.info("进入程控阶段1")
-                        pass
-                    else:
+                    try:
+                        if self.mission_step==0:
+                            self.mission_step=1
+                            self.P1=self.target[self.gpio_data[2]]
+                            self.P2=self.target[self.gpio_data[3]]-self.target[self.gpio_data[2]]
+                            logger.info("进入程控阶段1")
+                            pass
+                        else:
+                            self.end()
+                    except Exception as e:
+                        logger.error(e)
                         self.end()
                 time.sleep(0.01)
         def gpio_set(self,gpion,value=0):
@@ -62,7 +66,8 @@ class mission_general(object) :
             self.com_fc[1]=1
         def end(self):
             lock.acquire()
-            self.com_fc[6]=101
+            self.com_fc[1]=0
+            #self.com_fc[6]=101
             lock.release()
             logger.info("任务结束")
         def rerun(self):
