@@ -1,14 +1,13 @@
 import time
 from typing import List, Optional, Tuple, Union
-from CR_PM.PID import DeltaPID
 import cv2
 import numpy as np
 from pyzbar import pyzbar
 from scipy import ndimage
-from Vision_Net import FastestDetOnnx, FastestDet
+""" from Vision_Net import FastestDetOnnx, FastestDet
 
 deep = FastestDetOnnx(drawOutput=True)
-
+ """
 _DEBUG = True
 
 
@@ -962,3 +961,13 @@ def stack_images(imgArray, scale=0.5, lables=[]) -> np.ndarray:
                     1,
                 )
     return ver
+if __name__ == '__main__':
+    init_hsv_selector()
+    init_hsv_viewer()
+    cap=cv2.VideoCapture(0)
+    while True:
+        img = cap.read()[1]
+        update_hsv_viewer(img)
+        update_hsv_selector(img)
+        if cv2.waitKey(30) & 0xFF == ord("q"):
+            break

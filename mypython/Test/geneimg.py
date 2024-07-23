@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw
 
 # 创建 960x800 的白色底图
-img = Image.new('RGB', (960, 800), 'white')
+img = Image.new('RGB', (960,800), 'white')
 
 # 获取 ImageDraw 对象
 draw = ImageDraw.Draw(img)
@@ -20,4 +20,4 @@ for y in range(0, 801, 20):
         draw.line((0, y, 960, y), fill='skyblue', width=1)
 
 # 保存图片
-img.save('output.png')
+img.save('base.png')

@@ -7,7 +7,7 @@ import pickle
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1) 
 PORT = 2887
-mslist=[170,558,464,255]
+mslist=[170,228,-264,False,255]
 server_address = ("255.255.255.255", PORT)  # 接收方 服务器的ip地址和端口号
 while True:
       bydata=pickle.dumps(mslist)

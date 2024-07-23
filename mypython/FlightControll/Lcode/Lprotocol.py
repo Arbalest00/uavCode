@@ -53,7 +53,7 @@ class Serial_fc(object):
     def send_fc(self,comlist:List[int]):
         while self.fcsend_running==True:
             for value in comlist:
-                hex_value = hex(value)[2:].zfill(2)  # 将数组中的每个值转换成16进制字符串
+                hex_value = hex(int(value))[2:].zfill(2)  # 将数组中的每个值转换成16进制字符串
                 self.ser.write(bytes.fromhex(hex_value))  # 将16进制字符串转换为字节并发送到串口
             time.sleep(0.01)
     def send_start(self,comlist:List[int]):
@@ -124,6 +124,7 @@ class udp_terminal(object):
         self.udp_send_running=False
         self.takeoff_sign=False
         self.task_hjm=False
+        self.task_number=0
     def listen_start(self,IP,PORT):
         self.udp_listen_running=True
         self.udp_socket.bind((IP,PORT))
@@ -142,9 +143,9 @@ class udp_terminal(object):
             #logger.info("接收到的数据是%s",data)
             realdata=pickle.loads(data)
             if realdata[0]==170 and realdata[3]==255:
-                if realdata[1]==160 and realdata[2]==161:
+                if realdata[1]==160 and realdata[2]==160:
                     self.task_number=1
-                elif realdata[1]==160 and realdata[2]==162:
+                elif realdata[1]==160 and realdata[2]==161:
                     self.task_number=2
                 elif realdata[1]==192 and realdata[2]==192:
                     self.task_hjm=True
